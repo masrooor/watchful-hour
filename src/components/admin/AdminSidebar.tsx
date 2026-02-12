@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   BarChart3,
@@ -10,7 +11,9 @@ import {
   DollarSign,
   ClipboardList,
   MinusCircle,
+  LayoutDashboard,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -89,15 +92,26 @@ const menuGroups = [
 ];
 
 const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
+  const navigate = useNavigate();
+
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
+      <SidebarHeader className="p-4 space-y-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
             <Settings className="w-4 h-4 text-sidebar-primary-foreground" />
           </div>
           <span className="font-semibold text-sm text-sidebar-foreground">HR Portal</span>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start text-xs"
+          onClick={() => navigate("/")}
+        >
+          <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />
+          Employee Dashboard
+        </Button>
       </SidebarHeader>
       <SidebarContent>
         {menuGroups.map((group) => {
