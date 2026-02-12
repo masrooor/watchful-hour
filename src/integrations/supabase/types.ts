@@ -89,6 +89,63 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_settings: {
+        Row: {
+          admin_notification_email: string | null
+          allowed_latitude: number | null
+          allowed_longitude: number | null
+          allowed_radius_meters: number | null
+          created_at: string
+          grace_period_minutes: number
+          id: string
+          location_name: string | null
+          location_restriction_enabled: boolean
+          notify_admin_on_absence: boolean
+          notify_admin_on_late: boolean
+          notify_employee_on_clockout: boolean
+          notify_employee_on_late: boolean
+          office_end_time: string
+          office_start_time: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notification_email?: string | null
+          allowed_latitude?: number | null
+          allowed_longitude?: number | null
+          allowed_radius_meters?: number | null
+          created_at?: string
+          grace_period_minutes?: number
+          id?: string
+          location_name?: string | null
+          location_restriction_enabled?: boolean
+          notify_admin_on_absence?: boolean
+          notify_admin_on_late?: boolean
+          notify_employee_on_clockout?: boolean
+          notify_employee_on_late?: boolean
+          office_end_time?: string
+          office_start_time?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notification_email?: string | null
+          allowed_latitude?: number | null
+          allowed_longitude?: number | null
+          allowed_radius_meters?: number | null
+          created_at?: string
+          grace_period_minutes?: number
+          id?: string
+          location_name?: string | null
+          location_restriction_enabled?: boolean
+          notify_admin_on_absence?: boolean
+          notify_admin_on_late?: boolean
+          notify_employee_on_clockout?: boolean
+          notify_employee_on_late?: boolean
+          office_end_time?: string
+          office_start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leave_balances: {
         Row: {
           annual_total: number
