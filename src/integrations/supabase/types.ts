@@ -89,6 +89,48 @@ export type Database = {
         }
         Relationships: []
       }
+      leave_balances: {
+        Row: {
+          annual_total: number
+          annual_used: number
+          casual_total: number
+          casual_used: number
+          created_at: string
+          id: string
+          sick_total: number
+          sick_used: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          annual_total?: number
+          annual_used?: number
+          casual_total?: number
+          casual_used?: number
+          created_at?: string
+          id?: string
+          sick_total?: number
+          sick_used?: number
+          updated_at?: string
+          user_id: string
+          year?: number
+        }
+        Update: {
+          annual_total?: number
+          annual_used?: number
+          casual_total?: number
+          casual_used?: number
+          created_at?: string
+          id?: string
+          sick_total?: number
+          sick_used?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           approved_at: string | null
@@ -223,6 +265,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_leave_balance: { Args: { _user_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
