@@ -35,6 +35,7 @@ import {
 import EditAttendanceDialog from "@/components/admin/EditAttendanceDialog";
 import DeleteAttendanceDialog from "@/components/admin/DeleteAttendanceDialog";
 import AddEmployeeDialog from "@/components/admin/AddEmployeeDialog";
+import AttendanceAnalytics from "@/components/admin/AttendanceAnalytics";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -341,6 +342,7 @@ const AdminDashboard = () => {
         <Tabs defaultValue="attendance" className="space-y-4">
           <TabsList>
             <TabsTrigger value="attendance">Attendance Records</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="employees">Employees</TabsTrigger>
           </TabsList>
 
@@ -447,6 +449,14 @@ const AdminDashboard = () => {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AttendanceAnalytics
+              allAttendance={allAttendance}
+              profiles={profiles}
+              profileMap={profileMap}
+            />
           </TabsContent>
 
           <TabsContent value="employees">
