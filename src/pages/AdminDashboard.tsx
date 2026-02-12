@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, CalendarDays, Clock, AlertTriangle, CheckCircle,
   ArrowLeft, Search, Filter, Download, MapPin, LogIn, LogOut,
-  Pencil, Trash2, MoreHorizontal, Shield,
+  Pencil, Trash2, MoreHorizontal, Shield, Plus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -46,6 +46,7 @@ import Payroll from "@/components/admin/Payroll";
 import MonthlyAttendanceReport from "@/components/admin/MonthlyAttendanceReport";
 import EmployeeLoanManager from "@/components/admin/EmployeeLoanManager";
 import EditSalaryDialog from "@/components/admin/EditSalaryDialog";
+import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -86,6 +87,7 @@ const AdminDashboard = () => {
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [editSalaryProfile, setEditSalaryProfile] = useState<any>(null);
+  const [showAddAttendance, setShowAddAttendance] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -541,6 +543,12 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {activeSection === "attendance" && (
+                  <Button size="sm" variant="outline" onClick={() => setShowAddAttendance(true)}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Attendance
+                  </Button>
+                )}
                 <Button size="sm" onClick={() => setShowAddEmployee(true)}>
                   <Users className="w-4 h-4 mr-1" />
                   Add Employee
@@ -674,6 +682,19 @@ const AdminDashboard = () => {
           }}
         />
       )}
+
+      <AddAttendanceDialog
+        open={showAddAttendance}
+        onOpenChange={setShowAddAttendance}
+        profiles={profiles}
+        onSuccess={async () => {
+          const today = new Date().toISOString().split("T")[0];
+          const { data: att } = await supabase.from("attendance_records").select("*").eq("date", today);
+          setAttendance(att || []);
+          const { data: allAtt } = await supabase.from("attendance_records").select("*").order("date", { ascending: false }).limit(500);
+          setAllAttendance(allAtt || []);
+        }}
+      />
     </SidebarProvider>
   );
 };
