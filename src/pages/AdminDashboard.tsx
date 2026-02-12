@@ -44,6 +44,8 @@ import EmployeeDocuments from "@/components/admin/EmployeeDocuments";
 import AttendanceSettings from "@/components/admin/AttendanceSettings";
 import Payroll from "@/components/admin/Payroll";
 import MonthlyAttendanceReport from "@/components/admin/MonthlyAttendanceReport";
+import EmployeeLoanManager from "@/components/admin/EmployeeLoanManager";
+import EditSalaryDialog from "@/components/admin/EditSalaryDialog";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -62,6 +64,7 @@ const sectionTitles: Record<AdminSection, string> = {
   documents: "Employee Documents",
   payroll: "Salary & Payroll",
   "monthly-report": "Monthly Attendance Report",
+  loans: "Loans & Deductions",
 };
 
 const AdminDashboard = () => {
@@ -82,6 +85,7 @@ const AdminDashboard = () => {
   const [dateRange, setDateRange] = useState("today");
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
+  const [editSalaryProfile, setEditSalaryProfile] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -392,10 +396,11 @@ const AdminDashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                <TableHead>ID</TableHead>
                   <TableHead>Employee</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Department</TableHead>
+                  <TableHead className="text-right">Salary</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Today's Status</TableHead>
                   <TableHead>Joined</TableHead>
@@ -404,7 +409,7 @@ const AdminDashboard = () => {
               <TableBody>
                 {filteredProfiles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No employees found
                     </TableCell>
                   </TableRow>
@@ -428,6 +433,11 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{p.email || "—"}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{p.department || "—"}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" className="text-xs font-medium" onClick={() => setEditSalaryProfile(p)}>
+                            {p.salary ? `Rs ${Number(p.salary).toLocaleString()}` : "Set"}
+                          </Button>
+                        </TableCell>
                         <TableCell>
                           <Select
                             value={userRoles[p.user_id] || "user"}
@@ -488,6 +498,9 @@ const AdminDashboard = () => {
 
       case "monthly-report":
         return <MonthlyAttendanceReport profiles={profiles} profileMap={profileMap} />;
+
+      case "loans":
+        return <EmployeeLoanManager profiles={profiles} profileMap={profileMap} />;
 
       default:
         return null;
@@ -633,6 +646,18 @@ const AdminDashboard = () => {
           setProfiles(profs || []);
         }}
       />
+
+      {editSalaryProfile && (
+        <EditSalaryDialog
+          open={!!editSalaryProfile}
+          onOpenChange={(open) => !open && setEditSalaryProfile(null)}
+          profile={editSalaryProfile}
+          onSuccess={async () => {
+            const { data: profs } = await supabase.from("profiles").select("*");
+            setProfiles(profs || []);
+          }}
+        />
+      )}
     </SidebarProvider>
   );
 };

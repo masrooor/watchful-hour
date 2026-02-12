@@ -9,6 +9,7 @@ import {
   ChevronDown,
   DollarSign,
   ClipboardList,
+  MinusCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,7 +37,8 @@ export type AdminSection =
   | "announcements"
   | "documents"
   | "payroll"
-  | "monthly-report";
+  | "monthly-report"
+  | "loans";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -73,6 +75,7 @@ const menuGroups = [
     icon: DollarSign,
     items: [
       { id: "payroll" as const, label: "Salary & Payroll", icon: DollarSign },
+      { id: "loans" as const, label: "Loans & Deductions", icon: MinusCircle },
       { id: "monthly-report" as const, label: "Monthly Report", icon: ClipboardList },
     ],
   },
