@@ -179,6 +179,75 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_allowances: {
+        Row: {
+          allowance_type: string
+          amount: number
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allowance_type: string
+          amount?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allowance_type?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      employee_deductions: {
+        Row: {
+          amount: number
+          created_at: string
+          deduction_type: string
+          id: string
+          is_active: boolean
+          is_percentage: boolean
+          label: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          deduction_type: string
+          id?: string
+          is_active?: boolean
+          is_percentage?: boolean
+          label: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          deduction_type?: string
+          id?: string
+          is_active?: boolean
+          is_percentage?: boolean
+          label?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       employee_loans: {
         Row: {
           approval_status: string

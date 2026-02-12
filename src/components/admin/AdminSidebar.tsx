@@ -5,6 +5,7 @@ import {
   Settings,
   Users,
   TreePalm,
+  Wallet,
   Megaphone,
   FileText,
   ChevronDown,
@@ -43,6 +44,7 @@ export type AdminSection =
   | "payroll"
   | "monthly-report"
   | "loans"
+  | "allowances-deductions"
   | "audit-logs";
 
 interface AdminSidebarProps {
@@ -80,6 +82,7 @@ const menuGroups = [
     icon: DollarSign,
     items: [
       { id: "payroll" as const, label: "Salary & Payroll", icon: DollarSign },
+      { id: "allowances-deductions" as const, label: "Allowances & Deductions", icon: Wallet },
       { id: "loans" as const, label: "Loans & Deductions", icon: MinusCircle },
       { id: "monthly-report" as const, label: "Monthly Report", icon: ClipboardList },
     ],

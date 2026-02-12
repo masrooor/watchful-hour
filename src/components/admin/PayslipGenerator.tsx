@@ -17,6 +17,10 @@ interface PayslipData {
   loanDeduction: number;
   taxPercentage: number;
   taxDeduction: number;
+  totalAllowances: number;
+  totalCustomDeductions: number;
+  userAllowances: { label: string; amount: number }[];
+  userDeductions: { label: string; amount: number; is_percentage: boolean }[];
   deduction: number;
   netSalary: number;
 }
@@ -98,13 +102,21 @@ const PayslipGenerator = ({
       </table>
     </div>
     <div class="section" style="padding-top: 0;">
-      <p class="section-title">Earnings & Deductions</p>
+      <p class="section-title">Earnings</p>
       <table>
         <tr><th>Description</th><th>Amount (Rs)</th></tr>
         <tr><td>Gross Salary</td><td>${employee.salary.toLocaleString()}</td></tr>
+        ${(employee.userAllowances || []).map((a: any) => `<tr><td style="color:#27ae60;">${a.label}</td><td style="color:#27ae60;">+ ${Number(a.amount).toLocaleString()}</td></tr>`).join("")}
         <tr><td>Per Day Rate</td><td>${employee.perDaySalary.toFixed(0)}</td></tr>
+      </table>
+    </div>
+    <div class="section" style="padding-top: 0;">
+      <p class="section-title">Deductions</p>
+      <table>
+        <tr><th>Description</th><th>Amount (Rs)</th></tr>
         <tr><td style="color:#c0392b;">Absent Deduction (${employee.absentDays} days × Rs ${employee.perDaySalary.toFixed(0)})</td><td style="color:#c0392b;">- ${employee.absentDeduction.toFixed(0)}</td></tr>
         <tr><td style="color:#c0392b;">Loan Deduction</td><td style="color:#c0392b;">${employee.loanDeduction > 0 ? '- ' + employee.loanDeduction.toFixed(0) : '0'}</td></tr>
+        ${(employee.userDeductions || []).map((d: any) => `<tr><td style="color:#c0392b;">${d.label}${d.is_percentage ? ' (' + Number(d.amount) + '%)' : ''}</td><td style="color:#c0392b;">- ${d.is_percentage ? ((employee.salary * Number(d.amount)) / 100).toFixed(0) : Number(d.amount).toLocaleString()}</td></tr>`).join("")}
         <tr><td style="color:#c0392b;">Income Tax (${employee.taxPercentage}%)</td><td style="color:#c0392b;">${employee.taxDeduction > 0 ? '- ' + employee.taxDeduction.toFixed(0) : '0'}</td></tr>
         <tr class="total-row"><td>Net Payable</td><td>Rs ${employee.netSalary.toFixed(0).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",")}</td></tr>
       </table>

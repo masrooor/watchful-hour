@@ -29,6 +29,8 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
   const [holidays, setHolidays] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
   const [taxSlabs, setTaxSlabs] = useState<any[]>([]);
+  const [allowances, setAllowances] = useState<any[]>([]);
+  const [deductions, setDeductions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
 
-    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes] = await Promise.all([
+    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes, allowanceRes, deductionRes] = await Promise.all([
       supabase
         .from("leave_requests")
         .select("*")
@@ -56,6 +58,8 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       supabase.from("holidays").select("*").gte("date", startDate).lte("date", endDate),
       supabase.from("employee_loans").select("*").eq("is_active", true),
       supabase.from("tax_slabs").select("*").eq("is_active", true).order("min_salary", { ascending: true }),
+      supabase.from("employee_allowances").select("*").eq("is_active", true),
+      supabase.from("employee_deductions").select("*").eq("is_active", true),
     ]);
 
     setLeaveData(leaveRes.data || []);
@@ -64,6 +68,8 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     setHolidays(holidayRes.data || []);
     setLoans(loanRes.data || []);
     setTaxSlabs(taxRes.data || []);
+    setAllowances(allowanceRes.data || []);
+    setDeductions(deductionRes.data || []);
     setLoading(false);
   };
 
@@ -119,6 +125,16 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       const userLoans = loans.filter((l) => l.user_id === p.user_id);
       const loanDeduction = userLoans.reduce((s, l) => s + Number(l.monthly_deduction), 0);
 
+      // Allowances
+      const userAllowances = allowances.filter((a) => a.user_id === p.user_id);
+      const totalAllowances = userAllowances.reduce((s, a) => s + Number(a.amount), 0);
+
+      // Custom deductions
+      const userDeductions = deductions.filter((d) => d.user_id === p.user_id);
+      const totalCustomDeductions = userDeductions.reduce((s, d) => {
+        return s + (d.is_percentage ? (salary * Number(d.amount)) / 100 : Number(d.amount));
+      }, 0);
+
       // Tax calculation based on active slabs
       let taxPercentage = 0;
       for (const slab of taxSlabs) {
@@ -131,8 +147,9 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       }
       const taxDeduction = (salary * taxPercentage) / 100;
 
-      const totalDeduction = absentDeduction + loanDeduction + taxDeduction;
-      const netSalary = Math.max(0, salary - totalDeduction);
+      const totalDeduction = absentDeduction + loanDeduction + taxDeduction + totalCustomDeductions;
+      const grossWithAllowances = salary + totalAllowances;
+      const netSalary = Math.max(0, grossWithAllowances - totalDeduction);
 
       return {
         ...p,
@@ -146,16 +163,20 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         loanDeduction,
         taxPercentage,
         taxDeduction,
+        totalAllowances,
+        totalCustomDeductions,
+        userAllowances,
+        userDeductions,
         deduction: totalDeduction,
         netSalary,
       };
     });
-  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans, taxSlabs]);
+  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans, taxSlabs, allowances, deductions]);
 
   const exportPayrollCSV = () => {
-    const headers = ["Employee ID", "Name", "Department", "Salary", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Loan Deduction", "Tax %", "Tax Deduction", "Total Deduction", "Net Salary"];
+    const headers = ["Employee ID", "Name", "Department", "Salary", "Allowances", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Loan Deduction", "Custom Deductions", "Tax %", "Tax Deduction", "Total Deduction", "Net Salary"];
     const rows = payrollData.map((p) =>
-      [p.employee_id || "", p.name, p.department, p.salary, totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.taxPercentage, p.taxDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
+      [p.employee_id || "", p.name, p.department, p.salary, p.totalAllowances.toFixed(0), totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.totalCustomDeductions.toFixed(0), p.taxPercentage, p.taxDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
     );
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -274,21 +295,22 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
             Payroll — {months[selectedMonth]} {selectedYear}
           </CardTitle>
           <CardDescription>
-            Salary auto-calculated after deducting absent days, active loan installments, and applicable tax. Approved leaves are paid.
+            Salary auto-calculated with allowances, absent deductions, loan installments, custom deductions, and applicable tax. Approved leaves are paid.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead className="text-right">Gross Salary</TableHead>
-                <TableHead className="text-center">Present</TableHead>
-                <TableHead className="text-center">Leaves</TableHead>
-                <TableHead className="text-center">Absent</TableHead>
+                 <TableHead>Employee</TableHead>
+                 <TableHead>Department</TableHead>
+                 <TableHead className="text-right">Gross</TableHead>
+                 <TableHead className="text-right">Allowances</TableHead>
+                 <TableHead className="text-center">Present</TableHead>
+                 <TableHead className="text-center">Absent</TableHead>
                  <TableHead className="text-right">Absent Ded.</TableHead>
                  <TableHead className="text-right">Loan Ded.</TableHead>
+                 <TableHead className="text-right">Custom Ded.</TableHead>
                  <TableHead className="text-right">Tax Ded.</TableHead>
                  <TableHead className="text-right">Net Salary</TableHead>
                  <TableHead className="text-center">Payslip</TableHead>
@@ -297,7 +319,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
             <TableBody>
               {payrollData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                     No employees found
                   </TableCell>
                 </TableRow>
@@ -312,11 +334,11 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{p.department || "—"}</TableCell>
                     <TableCell className="text-right text-sm font-medium">Rs {p.salary.toLocaleString()}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary" className="bg-on-time/10 text-on-time">{p.presentDays}</Badge>
+                    <TableCell className="text-right text-sm font-medium text-primary">
+                      {p.totalAllowances > 0 ? `+ Rs ${p.totalAllowances.toLocaleString()}` : "—"}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary" className="bg-warning/10 text-warning">{p.leaveDays}</Badge>
+                      <Badge variant="secondary" className="bg-on-time/10 text-on-time">{p.presentDays}</Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="secondary" className={p.absentDays > 0 ? "bg-late/10 text-late" : ""}>{p.absentDays}</Badge>
@@ -326,6 +348,9 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                     </TableCell>
                     <TableCell className="text-right text-sm text-late font-medium">
                       {p.loanDeduction > 0 ? `- Rs ${p.loanDeduction.toFixed(0)}` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-late font-medium">
+                      {p.totalCustomDeductions > 0 ? `- Rs ${p.totalCustomDeductions.toFixed(0)}` : "—"}
                     </TableCell>
                     <TableCell className="text-right text-sm text-late font-medium">
                       {p.taxDeduction > 0 ? `- Rs ${p.taxDeduction.toFixed(0)} (${p.taxPercentage}%)` : "—"}

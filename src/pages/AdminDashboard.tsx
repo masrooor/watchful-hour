@@ -48,6 +48,7 @@ import EmployeeLoanManager from "@/components/admin/EmployeeLoanManager";
 import EditSalaryDialog from "@/components/admin/EditSalaryDialog";
 import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
 import AuditLogViewer from "@/components/admin/AuditLogViewer";
+import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesDeductions";
 import { logAudit } from "@/lib/auditLog";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -68,6 +69,7 @@ const sectionTitles: Record<AdminSection, string> = {
   payroll: "Salary & Payroll",
   "monthly-report": "Monthly Attendance Report",
   loans: "Loans & Deductions",
+  "allowances-deductions": "Allowances & Deductions",
   "audit-logs": "Audit Logs",
 };
 
@@ -527,6 +529,9 @@ const AdminDashboard = () => {
 
       case "loans":
         return <EmployeeLoanManager profiles={profiles} profileMap={profileMap} />;
+
+      case "allowances-deductions":
+        return <EmployeeAllowancesDeductions profiles={profiles} />;
 
       case "audit-logs":
         return <AuditLogViewer profileMap={profileMap} />;
