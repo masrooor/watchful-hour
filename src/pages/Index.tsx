@@ -22,18 +22,25 @@ const Index = () => {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
-      // Check admin status
+      // Check admin status and redirect if admin
       const { data: roles } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
       const admin = roles?.some(r => r.role === 'admin') ?? false;
       setIsAdmin(admin);
+
+      if (admin) {
+        setRedirecting(true);
+        navigate('/admin', { replace: true });
+        return;
+      }
 
       // Fetch attendance
       const today = new Date().toISOString().split('T')[0];
@@ -116,6 +123,13 @@ const Index = () => {
   });
 
   const userName = profiles.find(p => p.user_id === user?.id)?.name || user?.email || '';
+  if (loading || redirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
