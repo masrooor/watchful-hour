@@ -29,7 +29,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { CalendarDays, Check, X, Plus, Clock } from "lucide-react";
+import { CalendarDays, Check, X, Plus, Clock, TreePalm, Thermometer, Briefcase } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/20",
@@ -54,6 +56,7 @@ interface LeaveManagementProps {
 const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementProps) => {
   const { user } = useAuth();
   const [leaves, setLeaves] = useState<any[]>([]);
+  const [balances, setBalances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showApply, setShowApply] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -73,12 +76,26 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
     setLoading(false);
   };
 
+  const fetchBalances = async () => {
+    // Ensure current user has a balance record
+    if (user) {
+      await supabase.rpc("ensure_leave_balance", { _user_id: user.id });
+    }
+    const { data } = await supabase
+      .from("leave_balances")
+      .select("*")
+      .eq("year", new Date().getFullYear());
+    setBalances(data || []);
+  };
+
   useEffect(() => {
     fetchLeaves();
+    fetchBalances();
 
     const channel = supabase
       .channel("leave-changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "leave_requests" }, fetchLeaves)
+      .on("postgres_changes", { event: "*", schema: "public", table: "leave_balances" }, fetchBalances)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -126,8 +143,68 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
     return l.status === filter;
   });
 
+  // Aggregate balances: if admin/HR show all employees, else show own
+  const userBalance = isAdminOrHR
+    ? null
+    : balances.find((b) => b.user_id === user?.id);
+
+  const balanceCards = [
+    { label: "Casual", icon: TreePalm, total: "casual_total", used: "casual_used", color: "text-blue-500" },
+    { label: "Sick", icon: Thermometer, total: "sick_total", used: "sick_used", color: "text-orange-500" },
+    { label: "Annual", icon: Briefcase, total: "annual_total", used: "annual_used", color: "text-emerald-500" },
+  ];
+
   return (
     <div className="space-y-4">
+      {/* Balance cards for current user (non-admin) */}
+      {!isAdminOrHR && userBalance && (
+        <div className="grid grid-cols-3 gap-3">
+          {balanceCards.map((c) => {
+            const total = userBalance[c.total] || 0;
+            const used = userBalance[c.used] || 0;
+            const remaining = total - used;
+            const pct = total > 0 ? (used / total) * 100 : 0;
+            return (
+              <Card key={c.label} className="glass-card">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <c.icon className={`w-4 h-4 ${c.color}`} />
+                      <span className="text-sm font-medium">{c.label}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{remaining}/{total}</span>
+                  </div>
+                  <Progress value={pct} className="h-1.5" />
+                  <p className="text-xs text-muted-foreground">{used} used · {remaining} remaining</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Balance summary for admin/HR */}
+      {isAdminOrHR && balances.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {balanceCards.map((c) => {
+            const totalAll = balances.reduce((s, b) => s + (b[c.total] || 0), 0);
+            const usedAll = balances.reduce((s, b) => s + (b[c.used] || 0), 0);
+            return (
+              <Card key={c.label} className="glass-card">
+                <CardContent className="p-4 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <c.icon className={`w-4 h-4 ${c.color}`} />
+                    <span className="text-sm font-medium">{c.label} Leave</span>
+                  </div>
+                  <p className="text-2xl font-bold">{usedAll}<span className="text-sm font-normal text-muted-foreground">/{totalAll}</span></p>
+                  <p className="text-xs text-muted-foreground">used across {balances.length} employees</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Select value={filter} onValueChange={setFilter}>
