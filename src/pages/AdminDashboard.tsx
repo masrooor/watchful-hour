@@ -11,7 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -33,6 +32,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import AdminSidebar, { type AdminSection } from "@/components/admin/AdminSidebar";
 import EditAttendanceDialog from "@/components/admin/EditAttendanceDialog";
 import DeleteAttendanceDialog from "@/components/admin/DeleteAttendanceDialog";
 import AddEmployeeDialog from "@/components/admin/AddEmployeeDialog";
@@ -49,9 +50,20 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-warning/10 text-warning border-warning/20" },
 };
 
+const sectionTitles: Record<AdminSection, string> = {
+  attendance: "Attendance Records",
+  analytics: "Attendance Analytics",
+  settings: "Attendance Settings",
+  employees: "Employee List",
+  leaves: "Leave Management",
+  announcements: "Announcements",
+  documents: "Employee Documents",
+};
+
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState<AdminSection>("attendance");
   const [profiles, setProfiles] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [allAttendance, setAllAttendance] = useState<any[]>([]);
@@ -86,7 +98,6 @@ const AdminDashboard = () => {
       const { data: profs } = await supabase.from("profiles").select("*");
       setProfiles(profs || []);
 
-      // Fetch all user roles
       const { data: allRoles } = await supabase.from("user_roles").select("*");
       const rolesMap: Record<string, string> = {};
       allRoles?.forEach((r) => { rolesMap[r.user_id] = r.role; });
@@ -99,7 +110,6 @@ const AdminDashboard = () => {
         .eq("date", today);
       setAttendance(att || []);
 
-      // Fetch all attendance for history tab
       const { data: allAtt } = await supabase
         .from("attendance_records")
         .select("*")
@@ -254,331 +264,338 @@ const AdminDashboard = () => {
     day: "numeric",
   });
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight">HR Portal</h1>
-              <p className="text-xs text-muted-foreground">{today}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setShowAddEmployee(true)}>
-              <Users className="w-4 h-4 mr-1" />
-              Add Employee
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportCSV}>
-              <Download className="w-4 h-4 mr-1" />
-              Export CSV
-            </Button>
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-1" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
+  const showFilters = activeSection === "attendance" || activeSection === "employees";
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {statCards.map((card) => (
-            <div key={card.label} className="glass-card rounded-xl p-5 stat-glow transition-all duration-300 hover:scale-[1.02]">
-              <div className="flex items-center justify-between">
+  const renderContent = () => {
+    switch (activeSection) {
+      case "attendance":
+        return (
+          <div className="glass-card rounded-xl overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Clock In</TableHead>
+                  <TableHead>Clock Out</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[60px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAttendance.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      No attendance records found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAttendance.map((a) => {
+                    const p = profileMap[a.user_id];
+                    const config = statusConfig[a.status] || statusConfig.pending;
+                    return (
+                      <TableRow key={a.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                              {(p?.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm text-foreground">{p?.name || "Unknown"}</p>
+                              <p className="text-xs text-muted-foreground">{p?.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p?.department || "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{a.date}</TableCell>
+                        <TableCell>
+                          {a.clock_in ? (
+                            <span className="flex items-center gap-1 text-sm">
+                              <LogIn className="w-3.5 h-3.5 text-muted-foreground" />
+                              {new Date(a.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {a.clock_out ? (
+                            <span className="flex items-center gap-1 text-sm">
+                              <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
+                              {new Date(a.clock_out).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {a.location_name ? (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="w-3.5 h-3.5" />
+                              {a.location_name}
+                            </span>
+                          ) : a.latitude ? (
+                            <span className="text-xs text-muted-foreground">
+                              {a.latitude.toFixed(4)}, {a.longitude.toFixed(4)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={config.className}>{config.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setEditRecord(a)}>
+                                <Pencil className="w-4 h-4 mr-2" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => setDeleteRecord(a)}>
+                                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        );
+
+      case "analytics":
+        return (
+          <AttendanceAnalytics
+            allAttendance={allAttendance}
+            profiles={profiles}
+            profileMap={profileMap}
+          />
+        );
+
+      case "employees":
+        return (
+          <div className="glass-card rounded-xl overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Today's Status</TableHead>
+                  <TableHead>Joined</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProfiles.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      No employees found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredProfiles.map((p) => {
+                    const todayRecord = attendance.find((a) => a.user_id === p.user_id);
+                    const status = todayRecord?.status || "absent";
+                    const config = statusConfig[status];
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                          <Badge variant="secondary" className="font-mono text-xs">{p.employee_id || "—"}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                              {(p.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                            </div>
+                            <span className="font-medium text-sm text-foreground">{p.name || "Unknown"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p.email || "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p.department || "—"}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={userRoles[p.user_id] || "user"}
+                            onValueChange={async (newRole: "admin" | "user" | "hr") => {
+                              const prevRole = userRoles[p.user_id] || "user";
+                              setUserRoles((prev) => ({ ...prev, [p.user_id]: newRole }));
+                              const { error } = await supabase
+                                .from("user_roles")
+                                .update({ role: newRole })
+                                .eq("user_id", p.user_id);
+                              if (error) {
+                                setUserRoles((prev) => ({ ...prev, [p.user_id]: prevRole }));
+                                toast.error("Failed to update role");
+                              } else {
+                                toast.success(`${p.name} role updated to ${newRole}`);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-[100px] h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="hr">HR</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={config.className}>{config.label}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(p.created_at).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        );
+
+      case "leaves":
+        return <LeaveManagement profiles={profiles} profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />;
+
+      case "announcements":
+        return <Announcements profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />;
+
+      case "documents":
+        return <EmployeeDocuments profiles={profiles} isAdminOrHR={isAdmin || isHR} />;
+
+      case "settings":
+        return <AttendanceSettings />;
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+        <SidebarInset>
+          <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+            <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger />
+                <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">{card.label}</p>
-                  <p className="text-3xl font-bold mt-1 text-foreground">{card.value}</p>
-                </div>
-                <div className={`${card.bgClass} p-3 rounded-xl`}>
-                  <card.icon className={`w-6 h-6 ${card.colorClass}`} />
+                  <h1 className="text-xl font-bold text-foreground tracking-tight">{sectionTitles[activeSection]}</h1>
+                  <p className="text-xs text-muted-foreground">{today}</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={() => setShowAddEmployee(true)}>
+                  <Users className="w-4 h-4 mr-1" />
+                  Add Employee
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportCSV}>
+                  <Download className="w-4 h-4 mr-1" />
+                  Export CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={signOut}>
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Sign Out
+                </Button>
+              </div>
             </div>
-          ))}
-        </div>
+          </header>
 
-        {/* Filters */}
-        <div className="glass-card rounded-xl p-4 flex flex-wrap gap-3 items-center">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search employees..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={deptFilter} onValueChange={setDeptFilter}>
-            <SelectTrigger className="w-[160px]">
-              <Filter className="w-4 h-4 mr-1" />
-              <SelectValue placeholder="Department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
-              {departments.map((d) => (
-                <SelectItem key={d} value={d}>{d}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="on-time">On Time</SelectItem>
-              <SelectItem value="late">Late</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[130px]">
-              <CalendarDays className="w-4 h-4 mr-1" />
-              <SelectValue placeholder="Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <main className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            {/* Stats - show on attendance section */}
+            {activeSection === "attendance" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {statCards.map((card) => (
+                  <div key={card.label} className="glass-card rounded-xl p-5 stat-glow transition-all duration-300 hover:scale-[1.02]">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground font-medium">{card.label}</p>
+                        <p className="text-3xl font-bold mt-1 text-foreground">{card.value}</p>
+                      </div>
+                      <div className={`${card.bgClass} p-3 rounded-xl`}>
+                        <card.icon className={`w-6 h-6 ${card.colorClass}`} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-        {/* Tabs */}
-        <Tabs defaultValue="attendance" className="space-y-4">
-          <TabsList className="flex flex-wrap">
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="employees">Employees</TabsTrigger>
-            <TabsTrigger value="leaves">Leaves</TabsTrigger>
-            <TabsTrigger value="announcements">Announcements</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+            {/* Filters - show on attendance and employees */}
+            {showFilters && (
+              <div className="glass-card rounded-xl p-4 flex flex-wrap gap-3 items-center">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search employees..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={deptFilter} onValueChange={setDeptFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <Filter className="w-4 h-4 mr-1" />
+                    <SelectValue placeholder="Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    {departments.map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {activeSection === "attendance" && (
+                  <>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="on-time">On Time</SelectItem>
+                        <SelectItem value="late">Late</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={dateRange} onValueChange={setDateRange}>
+                      <SelectTrigger className="w-[130px]">
+                        <CalendarDays className="w-4 h-4 mr-1" />
+                        <SelectValue placeholder="Range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="week">This Week</SelectItem>
+                        <SelectItem value="month">This Month</SelectItem>
+                        <SelectItem value="all">All Time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              </div>
+            )}
 
-          <TabsContent value="attendance">
-            <div className="glass-card rounded-xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Clock In</TableHead>
-                    <TableHead>Clock Out</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[60px]">Actions</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAttendance.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        No attendance records found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredAttendance.map((a) => {
-                      const p = profileMap[a.user_id];
-                      const config = statusConfig[a.status] || statusConfig.pending;
-                      return (
-                        <TableRow key={a.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                                {(p?.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                              </div>
-                              <div>
-                                <p className="font-medium text-sm text-foreground">{p?.name || "Unknown"}</p>
-                                <p className="text-xs text-muted-foreground">{p?.email}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{p?.department || "—"}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{a.date}</TableCell>
-                          <TableCell>
-                            {a.clock_in ? (
-                              <span className="flex items-center gap-1 text-sm">
-                                <LogIn className="w-3.5 h-3.5 text-muted-foreground" />
-                                {new Date(a.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {a.clock_out ? (
-                              <span className="flex items-center gap-1 text-sm">
-                                <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
-                                {new Date(a.clock_out).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {a.location_name ? (
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <MapPin className="w-3.5 h-3.5" />
-                                {a.location_name}
-                              </span>
-                            ) : a.latitude ? (
-                              <span className="text-xs text-muted-foreground">
-                                {a.latitude.toFixed(4)}, {a.longitude.toFixed(4)}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={config.className}>{config.label}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setEditRecord(a)}>
-                                  <Pencil className="w-4 h-4 mr-2" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteRecord(a)}>
-                                  <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <AttendanceAnalytics
-              allAttendance={allAttendance}
-              profiles={profiles}
-              profileMap={profileMap}
-            />
-          </TabsContent>
-
-          <TabsContent value="employees">
-            <div className="glass-card rounded-xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Today's Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProfiles.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        No employees found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredProfiles.map((p) => {
-                      const todayRecord = attendance.find((a) => a.user_id === p.user_id);
-                      const status = todayRecord?.status || "absent";
-                      const config = statusConfig[status];
-                      return (
-                        <TableRow key={p.id}>
-                          <TableCell>
-                            <Badge variant="secondary" className="font-mono text-xs">{p.employee_id || "—"}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                                {(p.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                              </div>
-                              <span className="font-medium text-sm text-foreground">{p.name || "Unknown"}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{p.email || "—"}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{p.department || "—"}</TableCell>
-                          <TableCell>
-                            <Select
-                              value={userRoles[p.user_id] || "user"}
-                              onValueChange={async (newRole: "admin" | "user" | "hr") => {
-                                const prevRole = userRoles[p.user_id] || "user";
-                                setUserRoles((prev) => ({ ...prev, [p.user_id]: newRole }));
-                                const { error } = await supabase
-                                  .from("user_roles")
-                                  .update({ role: newRole })
-                                  .eq("user_id", p.user_id);
-                                if (error) {
-                                  setUserRoles((prev) => ({ ...prev, [p.user_id]: prevRole }));
-                                  toast.error("Failed to update role");
-                                } else {
-                                  toast.success(`${p.name} role updated to ${newRole}`);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-[100px] h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="user">User</SelectItem>
-                                <SelectItem value="hr">HR</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={config.className}>{config.label}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {new Date(p.created_at).toLocaleDateString()}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="leaves">
-            <LeaveManagement profiles={profiles} profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />
-          </TabsContent>
-
-          <TabsContent value="announcements">
-            <Announcements profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />
-          </TabsContent>
-
-          <TabsContent value="documents">
-            <EmployeeDocuments profiles={profiles} isAdminOrHR={isAdmin || isHR} />
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <AttendanceSettings />
-          </TabsContent>
-        </Tabs>
-      </main>
+            {renderContent()}
+          </main>
+        </SidebarInset>
+      </div>
 
       {editRecord && (
         <EditAttendanceDialog
@@ -606,7 +623,7 @@ const AdminDashboard = () => {
           setProfiles(profs || []);
         }}
       />
-    </div>
+    </SidebarProvider>
   );
 };
 
