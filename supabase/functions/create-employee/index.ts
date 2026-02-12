@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify the caller is an admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
@@ -23,7 +22,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Client with caller's token to check admin role
     const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -36,22 +34,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check admin role
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Check admin or HR role
     const { data: roles } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", caller.id)
-      .eq("role", "admin");
+      .in("role", ["admin", "hr"]);
 
     if (!roles || roles.length === 0) {
-      return new Response(JSON.stringify({ error: "Admin access required" }), {
+      return new Response(JSON.stringify({ error: "Admin or HR access required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { email, password, name, department } = await req.json();
+    const body = await req.json();
+    const { email, password, name, department, cnic, phone, emergency_contact_name,
+      emergency_contact_phone, address, city, date_of_birth, designation,
+      employment_type, salary, joining_date } = body;
 
     if (!email || !password || !name) {
       return new Response(JSON.stringify({ error: "Email, password, and name are required" }), {
@@ -60,7 +62,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create the user via admin API
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -75,11 +76,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update the auto-created profile with department
-    if (department && newUser.user) {
+    // Update the auto-created profile with all fields
+    if (newUser.user) {
+      const profileUpdate: Record<string, any> = { name };
+      if (department) profileUpdate.department = department;
+      if (cnic) profileUpdate.cnic = cnic;
+      if (phone) profileUpdate.phone = phone;
+      if (emergency_contact_name) profileUpdate.emergency_contact_name = emergency_contact_name;
+      if (emergency_contact_phone) profileUpdate.emergency_contact_phone = emergency_contact_phone;
+      if (address) profileUpdate.address = address;
+      if (city) profileUpdate.city = city;
+      if (date_of_birth) profileUpdate.date_of_birth = date_of_birth;
+      if (designation) profileUpdate.designation = designation;
+      if (employment_type) profileUpdate.employment_type = employment_type;
+      if (salary) profileUpdate.salary = salary;
+      if (joining_date) profileUpdate.joining_date = joining_date;
+
       await adminClient
         .from("profiles")
-        .update({ department, name })
+        .update(profileUpdate)
         .eq("user_id", newUser.user.id);
     }
 
