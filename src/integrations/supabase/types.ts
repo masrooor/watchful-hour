@@ -377,6 +377,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_slabs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          max_salary: number | null
+          min_salary: number
+          percentage: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_salary?: number | null
+          min_salary?: number
+          percentage?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_salary?: number | null
+          min_salary?: number
+          percentage?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

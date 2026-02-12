@@ -13,6 +13,10 @@ interface PayslipData {
   leaveDays: number;
   absentDays: number;
   lateDays: number;
+  absentDeduction: number;
+  loanDeduction: number;
+  taxPercentage: number;
+  taxDeduction: number;
   deduction: number;
   netSalary: number;
 }
@@ -99,7 +103,9 @@ const PayslipGenerator = ({
         <tr><th>Description</th><th>Amount (Rs)</th></tr>
         <tr><td>Gross Salary</td><td>${employee.salary.toLocaleString()}</td></tr>
         <tr><td>Per Day Rate</td><td>${employee.perDaySalary.toFixed(0)}</td></tr>
-        <tr><td style="color:#c0392b;">Absent Deduction (${employee.absentDays} days × Rs ${employee.perDaySalary.toFixed(0)})</td><td style="color:#c0392b;">- ${employee.deduction.toFixed(0)}</td></tr>
+        <tr><td style="color:#c0392b;">Absent Deduction (${employee.absentDays} days × Rs ${employee.perDaySalary.toFixed(0)})</td><td style="color:#c0392b;">- ${employee.absentDeduction.toFixed(0)}</td></tr>
+        <tr><td style="color:#c0392b;">Loan Deduction</td><td style="color:#c0392b;">${employee.loanDeduction > 0 ? '- ' + employee.loanDeduction.toFixed(0) : '0'}</td></tr>
+        <tr><td style="color:#c0392b;">Income Tax (${employee.taxPercentage}%)</td><td style="color:#c0392b;">${employee.taxDeduction > 0 ? '- ' + employee.taxDeduction.toFixed(0) : '0'}</td></tr>
         <tr class="total-row"><td>Net Payable</td><td>Rs ${employee.netSalary.toFixed(0).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",")}</td></tr>
       </table>
     </div>
