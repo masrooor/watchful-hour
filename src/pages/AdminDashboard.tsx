@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, CalendarDays, Clock, AlertTriangle, CheckCircle,
   ArrowLeft, Search, Filter, Download, MapPin, LogIn, LogOut,
+  Pencil, Trash2, MoreHorizontal,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import EditAttendanceDialog from "@/components/admin/EditAttendanceDialog";
+import DeleteAttendanceDialog from "@/components/admin/DeleteAttendanceDialog";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -44,6 +53,8 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editRecord, setEditRecord] = useState<any>(null);
+  const [deleteRecord, setDeleteRecord] = useState<any>(null);
   const [dateRange, setDateRange] = useState("today");
 
   useEffect(() => {
@@ -339,12 +350,14 @@ const AdminDashboard = () => {
                     <TableHead>Clock Out</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="w-[60px]">Actions</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredAttendance.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         No attendance records found
                       </TableCell>
                     </TableRow>
@@ -403,6 +416,23 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={config.className}>{config.label}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setEditRecord(a)}>
+                                  <Pencil className="w-4 h-4 mr-2" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteRecord(a)}>
+                                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       );
@@ -465,6 +495,24 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {editRecord && (
+        <EditAttendanceDialog
+          record={editRecord}
+          profileName={profileMap[editRecord.user_id]?.name || "Unknown"}
+          open={!!editRecord}
+          onOpenChange={(open) => !open && setEditRecord(null)}
+        />
+      )}
+
+      {deleteRecord && (
+        <DeleteAttendanceDialog
+          record={deleteRecord}
+          profileName={profileMap[deleteRecord.user_id]?.name || "Unknown"}
+          open={!!deleteRecord}
+          onOpenChange={(open) => !open && setDeleteRecord(null)}
+        />
+      )}
     </div>
   );
 };
