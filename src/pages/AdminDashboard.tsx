@@ -42,6 +42,8 @@ import LeaveManagement from "@/components/admin/LeaveManagement";
 import Announcements from "@/components/admin/Announcements";
 import EmployeeDocuments from "@/components/admin/EmployeeDocuments";
 import AttendanceSettings from "@/components/admin/AttendanceSettings";
+import Payroll from "@/components/admin/Payroll";
+import MonthlyAttendanceReport from "@/components/admin/MonthlyAttendanceReport";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -58,6 +60,8 @@ const sectionTitles: Record<AdminSection, string> = {
   leaves: "Leave Management",
   announcements: "Announcements",
   documents: "Employee Documents",
+  payroll: "Salary & Payroll",
+  "monthly-report": "Monthly Attendance Report",
 };
 
 const AdminDashboard = () => {
@@ -478,6 +482,12 @@ const AdminDashboard = () => {
 
       case "settings":
         return <AttendanceSettings />;
+
+      case "payroll":
+        return <Payroll profiles={profiles} profileMap={profileMap} />;
+
+      case "monthly-report":
+        return <MonthlyAttendanceReport profiles={profiles} profileMap={profileMap} />;
 
       default:
         return null;
