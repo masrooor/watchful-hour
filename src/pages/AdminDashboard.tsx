@@ -40,6 +40,7 @@ import AttendanceAnalytics from "@/components/admin/AttendanceAnalytics";
 import LeaveManagement from "@/components/admin/LeaveManagement";
 import Announcements from "@/components/admin/Announcements";
 import EmployeeDocuments from "@/components/admin/EmployeeDocuments";
+import AttendanceSettings from "@/components/admin/AttendanceSettings";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -361,6 +362,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="leaves">Leaves</TabsTrigger>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="attendance">
@@ -570,6 +572,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="documents">
             <EmployeeDocuments profiles={profiles} isAdminOrHR={isAdmin || isHR} />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <AttendanceSettings />
           </TabsContent>
         </Tabs>
       </main>
