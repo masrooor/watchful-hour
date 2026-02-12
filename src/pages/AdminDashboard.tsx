@@ -400,6 +400,9 @@ const AdminDashboard = () => {
                   <TableHead>Employee</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Department</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Job Status</TableHead>
+                  <TableHead>Shift</TableHead>
                   <TableHead className="text-right">Salary</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Today's Status</TableHead>
@@ -409,7 +412,7 @@ const AdminDashboard = () => {
               <TableBody>
                 {filteredProfiles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                       No employees found
                     </TableCell>
                   </TableRow>
@@ -433,6 +436,19 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{p.email || "—"}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{p.department || "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">{p.employment_type || "full-time"}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={p.job_status === "permanent" ? "bg-on-time/10 text-on-time border-on-time/20 text-xs" : "bg-warning/10 text-warning border-warning/20 text-xs"}>
+                            {p.job_status === "permanent" ? "Permanent" : "Probation"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {p.shift_start && p.shift_end
+                            ? `${p.shift_start.slice(0, 5)} - ${p.shift_end.slice(0, 5)}`
+                            : "Default"}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm" className="text-xs font-medium" onClick={() => setEditSalaryProfile(p)}>
                             {p.salary ? `Rs ${Number(p.salary).toLocaleString()}` : "Set"}

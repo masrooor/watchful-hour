@@ -324,10 +324,13 @@ export type Database = {
           employee_id: string | null
           employment_type: string | null
           id: string
+          job_status: string
           joining_date: string | null
           name: string
           phone: string | null
           salary: number | null
+          shift_end: string | null
+          shift_start: string | null
           updated_at: string
           user_id: string
         }
@@ -346,10 +349,13 @@ export type Database = {
           employee_id?: string | null
           employment_type?: string | null
           id?: string
+          job_status?: string
           joining_date?: string | null
           name?: string
           phone?: string | null
           salary?: number | null
+          shift_end?: string | null
+          shift_start?: string | null
           updated_at?: string
           user_id: string
         }
@@ -368,10 +374,13 @@ export type Database = {
           employee_id?: string | null
           employment_type?: string | null
           id?: string
+          job_status?: string
           joining_date?: string | null
           name?: string
           phone?: string | null
           salary?: number | null
+          shift_end?: string | null
+          shift_start?: string | null
           updated_at?: string
           user_id?: string
         }
