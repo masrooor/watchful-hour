@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/lib/auditLog";
 import {
   Dialog,
   DialogContent,
@@ -70,6 +71,11 @@ const AddEmployeeDialog = ({ open, onOpenChange, onSuccess }: AddEmployeeDialogP
       if (data?.error) throw new Error(data.error);
 
       toast.success(`Employee "${form.name}" added successfully`);
+      logAudit("create", "employee", data?.user_id, {
+        name: form.name,
+        email: form.email,
+        department: form.department,
+      });
       resetForm();
       onOpenChange(false);
       onSuccess();

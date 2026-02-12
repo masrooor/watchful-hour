@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/lib/auditLog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +64,13 @@ const EditAttendanceDialog = ({ record, profileName, open, onOpenChange }: EditA
       toast.error("Failed to update record");
     } else {
       toast.success("Attendance record updated");
+      logAudit("update", "attendance", record.id, {
+        employee: profileName,
+        date: record.date,
+        status,
+        clock_in: clockIn || null,
+        clock_out: clockOut || null,
+      });
       onOpenChange(false);
     }
   };

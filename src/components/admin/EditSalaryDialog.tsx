@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/lib/auditLog";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -29,6 +30,11 @@ const EditSalaryDialog = ({ open, onOpenChange, profile, onSuccess }: EditSalary
       toast.error("Failed to update salary");
     } else {
       toast.success(`Salary updated for ${profile.name}`);
+      logAudit("update", "salary", profile.id, {
+        employee: profile.name,
+        old_salary: profile.salary,
+        new_salary: salary,
+      });
       onOpenChange(false);
       onSuccess();
     }

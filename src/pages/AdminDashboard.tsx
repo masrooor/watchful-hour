@@ -47,6 +47,8 @@ import MonthlyAttendanceReport from "@/components/admin/MonthlyAttendanceReport"
 import EmployeeLoanManager from "@/components/admin/EmployeeLoanManager";
 import EditSalaryDialog from "@/components/admin/EditSalaryDialog";
 import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
+import AuditLogViewer from "@/components/admin/AuditLogViewer";
+import { logAudit } from "@/lib/auditLog";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -66,6 +68,7 @@ const sectionTitles: Record<AdminSection, string> = {
   payroll: "Salary & Payroll",
   "monthly-report": "Monthly Attendance Report",
   loans: "Loans & Deductions",
+  "audit-logs": "Audit Logs",
 };
 
 const AdminDashboard = () => {
@@ -471,6 +474,11 @@ const AdminDashboard = () => {
                                 toast.error("Failed to update role");
                               } else {
                                 toast.success(`${p.name} role updated to ${newRole}`);
+                                logAudit("update", "role", p.user_id, {
+                                  employee: p.name,
+                                  old_role: prevRole,
+                                  new_role: newRole,
+                                });
                               }
                             }}
                           >
@@ -519,6 +527,9 @@ const AdminDashboard = () => {
 
       case "loans":
         return <EmployeeLoanManager profiles={profiles} profileMap={profileMap} />;
+
+      case "audit-logs":
+        return <AuditLogViewer profileMap={profileMap} />;
 
       default:
         return null;
