@@ -9,7 +9,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { User, Pencil } from "lucide-react";
+import { User, Pencil, Lock, Loader2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const EmployeeProfileEditor = () => {
   const { user } = useAuth();
@@ -19,6 +20,30 @@ const EmployeeProfileEditor = () => {
     phone: "", address: "", city: "", emergency_contact_name: "", emergency_contact_phone: "",
   });
   const [saving, setSaving] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwForm, setPwForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+
+  const handlePasswordChange = async () => {
+    if (pwForm.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setPwSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: pwForm.newPassword });
+    if (error) {
+      toast.error(error.message || "Failed to update password");
+    } else {
+      toast.success("Password updated successfully");
+      setPwForm({ newPassword: "", confirmPassword: "" });
+      setPwOpen(false);
+    }
+    setPwSaving(false);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -89,6 +114,46 @@ const EmployeeProfileEditor = () => {
           ))}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Lock className="w-4 h-4 text-primary" />
+            Security
+          </CardTitle>
+          <Button size="sm" variant="outline" onClick={() => setPwOpen(true)}>
+            Change Password
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Update your password to keep your account secure.</p>
+        </CardContent>
+      </Card>
+
+      <Dialog open={pwOpen} onOpenChange={setPwOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>New Password</Label>
+              <Input type="password" value={pwForm.newPassword} onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))} placeholder="••••••••" minLength={6} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Confirm Password</Label>
+              <Input type="password" value={pwForm.confirmPassword} onChange={(e) => setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))} placeholder="••••••••" minLength={6} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPwOpen(false)}>Cancel</Button>
+            <Button onClick={handlePasswordChange} disabled={pwSaving}>
+              {pwSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {pwSaving ? "Updating..." : "Update Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
