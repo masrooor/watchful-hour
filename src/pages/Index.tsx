@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { CalendarDays, MapPin, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { CalendarDays, MapPin, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatsCards from "@/components/StatsCards";
 import EmployeeList from "@/components/EmployeeList";
@@ -12,6 +13,7 @@ import { AttendanceStats } from "@/types/attendance";
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [attendance, setAttendance] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -131,6 +133,12 @@ const Index = () => {
               <CalendarDays className="w-4 h-4" />
               <span>{today}</span>
             </div>
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
+                <Shield className="w-4 h-4 mr-1" />
+                Admin
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={signOut}>
               <LogOut className="w-4 h-4 mr-1" />
               Sign Out
