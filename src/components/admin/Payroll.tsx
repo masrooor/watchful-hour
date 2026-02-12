@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, DollarSign, CalendarDays, MinusCircle } from "lucide-react";
+import PayslipGenerator from "./PayslipGenerator";
 
 interface PayrollProps {
   profiles: any[];
@@ -260,12 +261,13 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                 <TableHead className="text-center">Absent</TableHead>
                 <TableHead className="text-right">Deduction</TableHead>
                 <TableHead className="text-right">Net Salary</TableHead>
+                <TableHead className="text-center">Payslip</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {payrollData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No employees found
                   </TableCell>
                 </TableRow>
@@ -294,6 +296,14 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                     </TableCell>
                     <TableCell className="text-right text-sm font-bold text-foreground">
                       Rs {p.netSalary.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <PayslipGenerator
+                        employee={p}
+                        month={months[selectedMonth]}
+                        year={selectedYear}
+                        totalWorkingDays={totalWorkingDays}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
