@@ -48,7 +48,7 @@ const EmployeeLoanDetails = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("employee_loans").insert({
+    const { data: inserted, error } = await supabase.from("employee_loans").insert({
       user_id: user!.id,
       description: form.description,
       total_amount: parseFloat(form.total_amount),
@@ -56,7 +56,7 @@ const EmployeeLoanDetails = () => {
       reason: form.reason || null,
       approval_status: "pending",
       is_active: false,
-    });
+    }).select("id").single();
     if (error) {
       toast.error("Failed to submit loan request");
     } else {
@@ -64,6 +64,24 @@ const EmployeeLoanDetails = () => {
       setShowApply(false);
       setForm({ description: "", total_amount: "", monthly_deduction: "", reason: "" });
       fetchLoans();
+
+      // Notify admin about new loan request
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("user_id", user!.id)
+        .single();
+
+      supabase.functions.invoke("notify-loan-request", {
+        body: {
+          loanId: inserted?.id,
+          employeeName: profile?.name || "Employee",
+          description: form.description,
+          totalAmount: form.total_amount,
+          monthlyDeduction: form.monthly_deduction,
+          reason: form.reason || null,
+        },
+      }).catch(console.error);
     }
     setSubmitting(false);
   };
