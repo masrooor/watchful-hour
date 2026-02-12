@@ -464,6 +464,7 @@ const AdminDashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>ID</TableHead>
                     <TableHead>Employee</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Department</TableHead>
@@ -474,7 +475,7 @@ const AdminDashboard = () => {
                 <TableBody>
                   {filteredProfiles.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         No employees found
                       </TableCell>
                     </TableRow>
@@ -485,6 +486,9 @@ const AdminDashboard = () => {
                       const config = statusConfig[status];
                       return (
                         <TableRow key={p.id}>
+                          <TableCell>
+                            <Badge variant="secondary" className="font-mono text-xs">{p.employee_id || "—"}</Badge>
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
