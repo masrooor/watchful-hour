@@ -1,7 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, MapPin, LogOut, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import StatsCards from "@/components/StatsCards";
 import EmployeeList from "@/components/EmployeeList";
 import ClockInWidget from "@/components/ClockInWidget";
@@ -11,9 +9,11 @@ import EmployeeLoanDetails from "@/components/EmployeeLoanDetails";
 import EmployeeLeaveWidget from "@/components/EmployeeLeaveWidget";
 import EmployeeProfileEditor from "@/components/EmployeeProfileEditor";
 import EmployeeAnnouncements from "@/components/EmployeeAnnouncements";
+import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { AttendanceStats } from "@/types/attendance";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -23,6 +23,7 @@ const Index = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
+  const [activeSection, setActiveSection] = useState("dashboard");
 
   useEffect(() => {
     if (!user) return;
@@ -69,7 +70,6 @@ const Index = () => {
         schema: 'public',
         table: 'attendance_records',
       }, () => {
-        // Refetch on any change
         const today = new Date().toISOString().split('T')[0];
         supabase
           .from('attendance_records')
@@ -91,7 +91,7 @@ const Index = () => {
     return { totalEmployees, present, late, absent, onTime };
   }, [attendance, profiles]);
 
-  const employees = useMemo(() => 
+  const employees = useMemo(() =>
     profiles.map(p => ({
       id: p.user_id,
       name: p.name || p.email || 'Unknown',
@@ -115,14 +115,8 @@ const Index = () => {
     }))
   , [attendance]);
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const userName = profiles.find(p => p.user_id === user?.id)?.name || user?.email || '';
+
   if (loading || redirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -131,59 +125,74 @@ const Index = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight">AttendTrack</h1>
-              <p className="text-xs text-muted-foreground">
-                {userName && `Hi, ${userName} • `}{isAdmin ? 'Admin' : 'Employee'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="w-4 h-4" />
-              <span>{today}</span>
-            </div>
-            {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
-                <Shield className="w-4 h-4 mr-1" />
-                Admin
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-1" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <StatsCards stats={stats} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <EmployeeList employees={employees} attendance={attendanceRecords} />
-          </div>
+  const renderContent = () => {
+    switch (activeSection) {
+      case "profile":
+        return <EmployeeProfileEditor />;
+      case "attendance":
+        return (
           <div className="space-y-6">
-            <EmployeeAnnouncements />
             <ClockInWidget />
-            <EmployeeProfileEditor />
-            <EmployeeLeaveWidget />
-            <EmployeeLoanDetails />
-            <NotificationsPanel employees={employees} attendance={attendanceRecords} />
             <LocationMap employees={employees} attendance={attendanceRecords} />
           </div>
-        </div>
-      </main>
-    </div>
+        );
+      case "leave":
+        return <EmployeeLeaveWidget />;
+      case "loans":
+        return <EmployeeLoanDetails />;
+      case "announcements":
+        return <EmployeeAnnouncements />;
+      case "dashboard":
+      default:
+        return (
+          <div className="space-y-6">
+            <StatsCards stats={stats} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <ClockInWidget />
+                <EmployeeAnnouncements />
+              </div>
+              <div className="space-y-6">
+                <EmployeeLeaveWidget />
+                <EmployeeLoanDetails />
+                <NotificationsPanel employees={employees} attendance={attendanceRecords} />
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <EmployeeSidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          userName={userName}
+        />
+        <main className="flex-1 overflow-auto">
+          <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+            <div className="px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
+              <SidebarTrigger />
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">
+                  {activeSection === "dashboard" ? "Dashboard" :
+                   activeSection === "profile" ? "My Profile" :
+                   activeSection === "attendance" ? "Attendance" :
+                   activeSection === "leave" ? "Leave Management" :
+                   activeSection === "loans" ? "Loan Details" :
+                   "Announcements"}
+                </h1>
+              </div>
+            </div>
+          </header>
+          <div className="p-4 sm:p-6 lg:p-8">
+            {renderContent()}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
