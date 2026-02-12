@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Clock, MapPin, Bell, Save, Loader2 } from "lucide-react";
+import WorkdayHolidaySettings from "./WorkdayHolidaySettings";
 
 interface AttendanceSettingsData {
   id: string;
@@ -24,6 +25,7 @@ interface AttendanceSettingsData {
   notify_employee_on_late: boolean;
   notify_employee_on_clockout: boolean;
   admin_notification_email: string | null;
+  work_days: number[];
 }
 
 const AttendanceSettings = () => {
@@ -259,6 +261,12 @@ const AttendanceSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Workdays & Holidays */}
+      <WorkdayHolidaySettings
+        workDays={settings.work_days}
+        onWorkDaysChange={(days) => updateField("work_days", days)}
+      />
 
       {/* Save Button */}
       <div className="flex justify-end">

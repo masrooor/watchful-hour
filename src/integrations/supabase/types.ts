@@ -107,6 +107,7 @@ export type Database = {
           office_end_time: string
           office_start_time: string
           updated_at: string
+          work_days: number[]
         }
         Insert: {
           admin_notification_email?: string | null
@@ -125,6 +126,7 @@ export type Database = {
           office_end_time?: string
           office_start_time?: string
           updated_at?: string
+          work_days?: number[]
         }
         Update: {
           admin_notification_email?: string | null
@@ -143,6 +145,31 @@ export type Database = {
           office_end_time?: string
           office_start_time?: string
           updated_at?: string
+          work_days?: number[]
+        }
+        Relationships: []
+      }
+      holidays: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
