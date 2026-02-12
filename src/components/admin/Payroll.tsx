@@ -26,6 +26,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [holidays, setHolidays] = useState<any[]>([]);
+  const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,7 +38,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
 
-    const [leaveRes, attRes, settingsRes, holidayRes] = await Promise.all([
+    const [leaveRes, attRes, settingsRes, holidayRes, loanRes] = await Promise.all([
       supabase
         .from("leave_requests")
         .select("*")
@@ -51,12 +52,14 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         .lte("date", endDate),
       supabase.from("attendance_settings").select("*").limit(1).single(),
       supabase.from("holidays").select("*").gte("date", startDate).lte("date", endDate),
+      supabase.from("employee_loans").select("*").eq("is_active", true),
     ]);
 
     setLeaveData(leaveRes.data || []);
     setAttendanceData(attRes.data || []);
     setSettings(settingsRes.data);
     setHolidays(holidayRes.data || []);
+    setLoans(loanRes.data || []);
     setLoading(false);
   };
 
@@ -104,11 +107,16 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       const presentDays = userAttendance.length;
       const lateDays = userAttendance.filter((a) => a.status === "late").length;
 
-      // Unpaid leave deduction (leaves beyond paid quota are deducted)
-      // For simplicity: all approved leaves are paid, absent days (not on leave, not present) are deducted
+      // Unpaid leave deduction
       const absentDays = Math.max(0, totalWorkingDays - presentDays - leaveDays);
-      const deduction = absentDays * perDaySalary;
-      const netSalary = Math.max(0, salary - deduction);
+      const absentDeduction = absentDays * perDaySalary;
+
+      // Loan deductions (sum of monthly deductions for active loans)
+      const userLoans = loans.filter((l) => l.user_id === p.user_id);
+      const loanDeduction = userLoans.reduce((s, l) => s + Number(l.monthly_deduction), 0);
+
+      const totalDeduction = absentDeduction + loanDeduction;
+      const netSalary = Math.max(0, salary - totalDeduction);
 
       return {
         ...p,
@@ -118,16 +126,18 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         presentDays,
         lateDays,
         absentDays,
-        deduction,
+        absentDeduction,
+        loanDeduction,
+        deduction: totalDeduction,
         netSalary,
       };
     });
-  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear]);
+  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans]);
 
   const exportPayrollCSV = () => {
-    const headers = ["Employee ID", "Name", "Department", "Salary", "Working Days", "Present", "Leaves", "Absent", "Deduction", "Net Salary"];
+    const headers = ["Employee ID", "Name", "Department", "Salary", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Loan Deduction", "Total Deduction", "Net Salary"];
     const rows = payrollData.map((p) =>
-      [p.employee_id || "", p.name, p.department, p.salary, totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
+      [p.employee_id || "", p.name, p.department, p.salary, totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
     );
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -246,7 +256,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
             Payroll — {months[selectedMonth]} {selectedYear}
           </CardTitle>
           <CardDescription>
-            Salary auto-calculated after deducting absent days. Approved leaves are paid.
+            Salary auto-calculated after deducting absent days and active loan installments. Approved leaves are paid.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -259,7 +269,8 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                 <TableHead className="text-center">Present</TableHead>
                 <TableHead className="text-center">Leaves</TableHead>
                 <TableHead className="text-center">Absent</TableHead>
-                <TableHead className="text-right">Deduction</TableHead>
+                <TableHead className="text-right">Absent Ded.</TableHead>
+                <TableHead className="text-right">Loan Ded.</TableHead>
                 <TableHead className="text-right">Net Salary</TableHead>
                 <TableHead className="text-center">Payslip</TableHead>
               </TableRow>
@@ -267,7 +278,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
             <TableBody>
               {payrollData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     No employees found
                   </TableCell>
                 </TableRow>
@@ -292,7 +303,10 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                       <Badge variant="secondary" className={p.absentDays > 0 ? "bg-late/10 text-late" : ""}>{p.absentDays}</Badge>
                     </TableCell>
                     <TableCell className="text-right text-sm text-late font-medium">
-                      {p.deduction > 0 ? `- Rs ${p.deduction.toFixed(0)}` : "—"}
+                      {p.absentDeduction > 0 ? `- Rs ${p.absentDeduction.toFixed(0)}` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-late font-medium">
+                      {p.loanDeduction > 0 ? `- Rs ${p.loanDeduction.toFixed(0)}` : "—"}
                     </TableCell>
                     <TableCell className="text-right text-sm font-bold text-foreground">
                       Rs {p.netSalary.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}

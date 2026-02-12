@@ -149,6 +149,45 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_loans: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          monthly_deduction: number
+          start_date: string
+          total_amount: number
+          total_deducted: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          monthly_deduction?: number
+          start_date?: string
+          total_amount?: number
+          total_deducted?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          monthly_deduction?: number
+          start_date?: string
+          total_amount?: number
+          total_deducted?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       holidays: {
         Row: {
           created_at: string
