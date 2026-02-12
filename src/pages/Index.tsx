@@ -7,6 +7,7 @@ import EmployeeList from "@/components/EmployeeList";
 import ClockInWidget from "@/components/ClockInWidget";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import LocationMap from "@/components/LocationMap";
+import EmployeeLoanDetails from "@/components/EmployeeLoanDetails";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { AttendanceStats } from "@/types/attendance";
@@ -156,6 +157,7 @@ const Index = () => {
           </div>
           <div className="space-y-6">
             <ClockInWidget />
+            <EmployeeLoanDetails />
             <NotificationsPanel employees={employees} attendance={attendanceRecords} />
             <LocationMap employees={employees} attendance={attendanceRecords} />
           </div>
