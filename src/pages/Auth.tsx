@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { MapPin, Loader2 } from "lucide-react";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -21,7 +21,14 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth?mode=reset`,
+        });
+        if (error) throw error;
+        toast.success("Password reset link sent! Check your email.");
+        setMode("login");
+      } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
@@ -57,14 +64,18 @@ const Auth = () => {
 
         <div className="glass-card rounded-xl p-8">
           <h2 className="text-xl font-semibold text-foreground mb-1">
-            {isLogin ? "Welcome back" : "Create account"}
+            {mode === "login" ? "Welcome back" : mode === "signup" ? "Create account" : "Reset password"}
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            {isLogin ? "Sign in to your account" : "Sign up to start tracking attendance"}
+            {mode === "login"
+              ? "Sign in to your account"
+              : mode === "signup"
+              ? "Sign up to start tracking attendance"
+              : "Enter your email to receive a reset link"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {mode === "signup" && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
@@ -73,7 +84,7 @@ const Auth = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="John Doe"
-                    required={!isLogin}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -83,7 +94,7 @@ const Auth = () => {
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                     placeholder="Engineering"
-                    required={!isLogin}
+                    required
                   />
                 </div>
               </>
@@ -99,32 +110,55 @@ const Auth = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
-            </div>
+            {mode !== "forgot" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+              </div>
+            )}
+            {mode === "login" && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setMode("forgot")}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isLogin ? "Sign In" : "Create Account"}
+              {mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link"}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-primary hover:underline"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
+            {mode === "forgot" ? (
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="text-sm text-primary hover:underline"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                className="text-sm text-primary hover:underline"
+              >
+                {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+              </button>
+            )}
           </div>
         </div>
       </div>
