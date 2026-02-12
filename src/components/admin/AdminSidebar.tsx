@@ -12,6 +12,7 @@ import {
   ClipboardList,
   MinusCircle,
   LayoutDashboard,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +42,8 @@ export type AdminSection =
   | "documents"
   | "payroll"
   | "monthly-report"
-  | "loans";
+  | "loans"
+  | "audit-logs";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -87,6 +89,13 @@ const menuGroups = [
     icon: Megaphone,
     items: [
       { id: "announcements" as const, label: "Announcements", icon: Megaphone },
+    ],
+  },
+  {
+    label: "Security",
+    icon: ShieldCheck,
+    items: [
+      { id: "audit-logs" as const, label: "Audit Logs", icon: ShieldCheck },
     ],
   },
 ];

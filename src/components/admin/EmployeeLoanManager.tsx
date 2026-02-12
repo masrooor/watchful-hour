@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { logAudit } from "@/lib/auditLog";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -93,6 +94,10 @@ const EmployeeLoanManager = ({ profiles, profileMap }: EmployeeLoanManagerProps)
     if (error) toast.error("Failed to approve");
     else {
       toast.success("Loan approved — deductions will begin");
+      logAudit("approve", "loan", loan.id, {
+        employee: profileMap[loan.user_id]?.name,
+        amount: loan.total_amount,
+      });
       sendLoanNotification(loan.id, "approved");
       fetchLoans();
     }
@@ -106,6 +111,10 @@ const EmployeeLoanManager = ({ profiles, profileMap }: EmployeeLoanManagerProps)
     if (error) toast.error("Failed to reject");
     else {
       toast.success("Loan request rejected");
+      logAudit("reject", "loan", loan.id, {
+        employee: profileMap[loan.user_id]?.name,
+        amount: loan.total_amount,
+      });
       sendLoanNotification(loan.id, "rejected");
       fetchLoans();
     }
