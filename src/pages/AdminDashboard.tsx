@@ -37,6 +37,9 @@ import EditAttendanceDialog from "@/components/admin/EditAttendanceDialog";
 import DeleteAttendanceDialog from "@/components/admin/DeleteAttendanceDialog";
 import AddEmployeeDialog from "@/components/admin/AddEmployeeDialog";
 import AttendanceAnalytics from "@/components/admin/AttendanceAnalytics";
+import LeaveManagement from "@/components/admin/LeaveManagement";
+import Announcements from "@/components/admin/Announcements";
+import EmployeeDocuments from "@/components/admin/EmployeeDocuments";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -52,6 +55,7 @@ const AdminDashboard = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [allAttendance, setAllAttendance] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [isHR, setIsHR] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
@@ -72,9 +76,11 @@ const AdminDashboard = () => {
         .eq("user_id", user.id);
 
       const admin = roles?.some((r) => r.role === "admin") ?? false;
+      const hr = roles?.some((r) => r.role === "hr") ?? false;
       setIsAdmin(admin);
+      setIsHR(hr);
 
-      if (!admin) return;
+      if (!admin && !hr) return;
 
       const { data: profs } = await supabase.from("profiles").select("*");
       setProfiles(profs || []);
@@ -212,13 +218,13 @@ const AdminDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (isAdmin === false) {
+  if (isAdmin === false && !isHR) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <AlertTriangle className="w-12 h-12 text-warning mx-auto" />
           <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
-          <p className="text-muted-foreground">You need admin privileges to view this page.</p>
+          <p className="text-muted-foreground">You need admin or HR privileges to view this page.</p>
           <Button onClick={() => navigate("/")}>Go to Dashboard</Button>
         </div>
       </div>
@@ -259,7 +265,7 @@ const AdminDashboard = () => {
               <MapPin className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight">Admin Dashboard</h1>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">HR Portal</h1>
               <p className="text-xs text-muted-foreground">{today}</p>
             </div>
           </div>
@@ -348,10 +354,13 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="attendance" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="attendance">Attendance Records</TabsTrigger>
+          <TabsList className="flex flex-wrap">
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="employees">Employees</TabsTrigger>
+            <TabsTrigger value="leaves">Leaves</TabsTrigger>
+            <TabsTrigger value="announcements">Announcements</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
 
           <TabsContent value="attendance">
@@ -511,7 +520,7 @@ const AdminDashboard = () => {
                           <TableCell>
                             <Select
                               value={userRoles[p.user_id] || "user"}
-                              onValueChange={async (newRole: "admin" | "user") => {
+                              onValueChange={async (newRole: "admin" | "user" | "hr") => {
                                 const prevRole = userRoles[p.user_id] || "user";
                                 setUserRoles((prev) => ({ ...prev, [p.user_id]: newRole }));
                                 const { error } = await supabase
@@ -531,6 +540,7 @@ const AdminDashboard = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="hr">HR</SelectItem>
                                 <SelectItem value="admin">Admin</SelectItem>
                               </SelectContent>
                             </Select>
@@ -548,6 +558,18 @@ const AdminDashboard = () => {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+
+          <TabsContent value="leaves">
+            <LeaveManagement profiles={profiles} profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />
+          </TabsContent>
+
+          <TabsContent value="announcements">
+            <Announcements profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <EmployeeDocuments profiles={profiles} isAdminOrHR={isAdmin || isHR} />
           </TabsContent>
         </Tabs>
       </main>

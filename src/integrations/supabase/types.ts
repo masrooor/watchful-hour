@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          priority: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          priority?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          priority?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           clock_in: string | null
@@ -56,37 +89,112 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
+      leave_requests: {
         Row: {
-          avatar_url: string | null
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
-          department: string
-          email: string | null
-          employee_id: string | null
+          end_date: string
           id: string
-          name: string
+          leave_type: string
+          reason: string | null
+          start_date: string
+          status: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          avatar_url?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
-          department?: string
-          email?: string | null
-          employee_id?: string | null
+          end_date: string
           id?: string
-          name?: string
+          leave_type?: string
+          reason?: string | null
+          start_date: string
+          status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          avatar_url?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
-          department?: string
-          email?: string | null
-          employee_id?: string | null
+          end_date?: string
           id?: string
+          leave_type?: string
+          reason?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          city: string | null
+          cnic: string | null
+          created_at: string
+          date_of_birth: string | null
+          department: string
+          designation: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string | null
+          employment_type: string | null
+          id: string
+          joining_date: string | null
+          name: string
+          phone: string | null
+          salary: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          cnic?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string
+          designation?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string | null
+          employment_type?: string | null
+          id?: string
+          joining_date?: string | null
           name?: string
+          phone?: string | null
+          salary?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          cnic?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string
+          designation?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string | null
+          employment_type?: string | null
+          id?: string
+          joining_date?: string | null
+          name?: string
+          phone?: string | null
+          salary?: number | null
           updated_at?: string
           user_id?: string
         }
