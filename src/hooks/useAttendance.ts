@@ -13,7 +13,7 @@ export const useAttendance = () => {
     try {
       const now = new Date();
       const cutoff = new Date();
-      cutoff.setHours(9, 0, 0, 0);
+      cutoff.setHours(10, 30, 0, 0);
       const status = now > cutoff ? 'late' : 'on-time';
       const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
