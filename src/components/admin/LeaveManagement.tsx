@@ -133,8 +133,22 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
 
     if (error) {
       toast.error(`Failed to ${status} leave`);
-    } else {
-      toast.success(`Leave ${status}`);
+      return;
+    }
+
+    toast.success(`Leave ${status}`);
+
+    // Get approver name for email
+    const approverProfile = profiles.find((p: any) => p.user_id === user!.id);
+    const approverName = approverProfile?.name || user!.email;
+
+    // Send notification email
+    try {
+      await supabase.functions.invoke('notify-leave-action', {
+        body: { leaveId: id, action: status, approverName },
+      });
+    } catch (notifError) {
+      console.error('Failed to send leave notification:', notifError);
     }
   };
 
