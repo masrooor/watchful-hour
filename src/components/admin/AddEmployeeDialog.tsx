@@ -31,7 +31,8 @@ const AddEmployeeDialog = ({ open, onOpenChange, onSuccess }: AddEmployeeDialogP
     name: "", email: "", department: "", password: "",
     cnic: "", phone: "", emergency_contact_name: "", emergency_contact_phone: "",
     address: "", city: "", date_of_birth: "", designation: "",
-    employment_type: "full-time", salary: "", joining_date: "",
+    employment_type: "full-time", job_status: "probation", salary: "", joining_date: "",
+    shift_start: "", shift_end: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -41,7 +42,8 @@ const AddEmployeeDialog = ({ open, onOpenChange, onSuccess }: AddEmployeeDialogP
     name: "", email: "", department: "", password: "",
     cnic: "", phone: "", emergency_contact_name: "", emergency_contact_phone: "",
     address: "", city: "", date_of_birth: "", designation: "",
-    employment_type: "full-time", salary: "", joining_date: "",
+    employment_type: "full-time", job_status: "probation", salary: "", joining_date: "",
+    shift_start: "", shift_end: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,12 +179,34 @@ const AddEmployeeDialog = ({ open, onOpenChange, onSuccess }: AddEmployeeDialogP
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
+                  <Label htmlFor="emp-job-status">Job Status</Label>
+                  <Select value={form.job_status} onValueChange={(v) => update("job_status", v)}>
+                    <SelectTrigger id="emp-job-status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="probation">Probation</SelectItem>
+                      <SelectItem value="permanent">Permanent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="emp-salary">Salary</Label>
                   <Input id="emp-salary" type="number" value={form.salary} onChange={(e) => update("salary", e.target.value)} placeholder="50000" />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="emp-joining">Joining Date</Label>
                   <Input id="emp-joining" type="date" value={form.joining_date} onChange={(e) => update("joining_date", e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="emp-shift-start">Shift Start Time</Label>
+                  <Input id="emp-shift-start" type="time" value={form.shift_start} onChange={(e) => update("shift_start", e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="emp-shift-end">Shift End Time</Label>
+                  <Input id="emp-shift-end" type="time" value={form.shift_end} onChange={(e) => update("shift_end", e.target.value)} />
                 </div>
               </div>
             </TabsContent>

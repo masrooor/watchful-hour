@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { email, password, name, department, cnic, phone, emergency_contact_name,
       emergency_contact_phone, address, city, date_of_birth, designation,
-      employment_type, salary, joining_date } = body;
+      employment_type, job_status, salary, joining_date, shift_start, shift_end } = body;
 
     if (!email || !password || !name) {
       return new Response(JSON.stringify({ error: "Email, password, and name are required" }), {
@@ -89,8 +89,11 @@ Deno.serve(async (req) => {
       if (date_of_birth) profileUpdate.date_of_birth = date_of_birth;
       if (designation) profileUpdate.designation = designation;
       if (employment_type) profileUpdate.employment_type = employment_type;
+      if (job_status) profileUpdate.job_status = job_status;
       if (salary) profileUpdate.salary = salary;
       if (joining_date) profileUpdate.joining_date = joining_date;
+      if (shift_start) profileUpdate.shift_start = shift_start;
+      if (shift_end) profileUpdate.shift_end = shift_end;
 
       await adminClient
         .from("profiles")
