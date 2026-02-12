@@ -7,6 +7,8 @@ import {
   Megaphone,
   FileText,
   ChevronDown,
+  DollarSign,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,7 +34,9 @@ export type AdminSection =
   | "employees"
   | "leaves"
   | "announcements"
-  | "documents";
+  | "documents"
+  | "payroll"
+  | "monthly-report";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -62,6 +66,14 @@ const menuGroups = [
     items: [
       { id: "employees" as const, label: "Employee List", icon: Users },
       { id: "documents" as const, label: "Documents", icon: FileText },
+    ],
+  },
+  {
+    label: "Payroll",
+    icon: DollarSign,
+    items: [
+      { id: "payroll" as const, label: "Salary & Payroll", icon: DollarSign },
+      { id: "monthly-report" as const, label: "Monthly Report", icon: ClipboardList },
     ],
   },
   {
