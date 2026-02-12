@@ -69,6 +69,16 @@ const EmployeeLoanManager = ({ profiles, profileMap }: EmployeeLoanManagerProps)
     setSubmitting(false);
   };
 
+  const sendLoanNotification = async (loanId: string, action: string) => {
+    try {
+      await supabase.functions.invoke("notify-loan-action", {
+        body: { loanId, action, approverName: "Admin" },
+      });
+    } catch (e) {
+      console.error("Failed to send loan notification:", e);
+    }
+  };
+
   const approveLoan = async (loan: any) => {
     const { error } = await supabase
       .from("employee_loans")
@@ -81,7 +91,11 @@ const EmployeeLoanManager = ({ profiles, profileMap }: EmployeeLoanManagerProps)
       })
       .eq("id", loan.id);
     if (error) toast.error("Failed to approve");
-    else { toast.success("Loan approved — deductions will begin"); fetchLoans(); }
+    else {
+      toast.success("Loan approved — deductions will begin");
+      sendLoanNotification(loan.id, "approved");
+      fetchLoans();
+    }
   };
 
   const rejectLoan = async (loan: any) => {
@@ -90,7 +104,11 @@ const EmployeeLoanManager = ({ profiles, profileMap }: EmployeeLoanManagerProps)
       .update({ approval_status: "rejected" })
       .eq("id", loan.id);
     if (error) toast.error("Failed to reject");
-    else { toast.success("Loan request rejected"); fetchLoans(); }
+    else {
+      toast.success("Loan request rejected");
+      sendLoanNotification(loan.id, "rejected");
+      fetchLoans();
+    }
   };
 
   const toggleLoan = async (loan: any) => {
