@@ -5,8 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, DollarSign, CalendarDays, MinusCircle } from "lucide-react";
+import { Download, Loader2, DollarSign, CalendarDays, MinusCircle, Percent } from "lucide-react";
 import PayslipGenerator from "./PayslipGenerator";
+import TaxSlabSettings from "./TaxSlabSettings";
 
 interface PayrollProps {
   profiles: any[];
@@ -27,6 +28,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
   const [settings, setSettings] = useState<any>(null);
   const [holidays, setHolidays] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
+  const [taxSlabs, setTaxSlabs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
 
-    const [leaveRes, attRes, settingsRes, holidayRes, loanRes] = await Promise.all([
+    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes] = await Promise.all([
       supabase
         .from("leave_requests")
         .select("*")
@@ -53,6 +55,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       supabase.from("attendance_settings").select("*").limit(1).single(),
       supabase.from("holidays").select("*").gte("date", startDate).lte("date", endDate),
       supabase.from("employee_loans").select("*").eq("is_active", true),
+      supabase.from("tax_slabs").select("*").eq("is_active", true).order("min_salary", { ascending: true }),
     ]);
 
     setLeaveData(leaveRes.data || []);
@@ -60,6 +63,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     setSettings(settingsRes.data);
     setHolidays(holidayRes.data || []);
     setLoans(loanRes.data || []);
+    setTaxSlabs(taxRes.data || []);
     setLoading(false);
   };
 
@@ -115,7 +119,19 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       const userLoans = loans.filter((l) => l.user_id === p.user_id);
       const loanDeduction = userLoans.reduce((s, l) => s + Number(l.monthly_deduction), 0);
 
-      const totalDeduction = absentDeduction + loanDeduction;
+      // Tax calculation based on active slabs
+      let taxPercentage = 0;
+      for (const slab of taxSlabs) {
+        const min = Number(slab.min_salary);
+        const max = slab.max_salary ? Number(slab.max_salary) : Infinity;
+        if (salary >= min && salary <= max) {
+          taxPercentage = Number(slab.percentage);
+          break;
+        }
+      }
+      const taxDeduction = (salary * taxPercentage) / 100;
+
+      const totalDeduction = absentDeduction + loanDeduction + taxDeduction;
       const netSalary = Math.max(0, salary - totalDeduction);
 
       return {
@@ -128,16 +144,18 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         absentDays,
         absentDeduction,
         loanDeduction,
+        taxPercentage,
+        taxDeduction,
         deduction: totalDeduction,
         netSalary,
       };
     });
-  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans]);
+  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans, taxSlabs]);
 
   const exportPayrollCSV = () => {
-    const headers = ["Employee ID", "Name", "Department", "Salary", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Loan Deduction", "Total Deduction", "Net Salary"];
+    const headers = ["Employee ID", "Name", "Department", "Salary", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Loan Deduction", "Tax %", "Tax Deduction", "Total Deduction", "Net Salary"];
     const rows = payrollData.map((p) =>
-      [p.employee_id || "", p.name, p.department, p.salary, totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
+      [p.employee_id || "", p.name, p.department, p.salary, totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.taxPercentage, p.taxDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
     );
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -256,7 +274,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
             Payroll — {months[selectedMonth]} {selectedYear}
           </CardTitle>
           <CardDescription>
-            Salary auto-calculated after deducting absent days and active loan installments. Approved leaves are paid.
+            Salary auto-calculated after deducting absent days, active loan installments, and applicable tax. Approved leaves are paid.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -269,16 +287,17 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                 <TableHead className="text-center">Present</TableHead>
                 <TableHead className="text-center">Leaves</TableHead>
                 <TableHead className="text-center">Absent</TableHead>
-                <TableHead className="text-right">Absent Ded.</TableHead>
-                <TableHead className="text-right">Loan Ded.</TableHead>
-                <TableHead className="text-right">Net Salary</TableHead>
-                <TableHead className="text-center">Payslip</TableHead>
+                 <TableHead className="text-right">Absent Ded.</TableHead>
+                 <TableHead className="text-right">Loan Ded.</TableHead>
+                 <TableHead className="text-right">Tax Ded.</TableHead>
+                 <TableHead className="text-right">Net Salary</TableHead>
+                 <TableHead className="text-center">Payslip</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {payrollData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                     No employees found
                   </TableCell>
                 </TableRow>
@@ -308,6 +327,9 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                     <TableCell className="text-right text-sm text-late font-medium">
                       {p.loanDeduction > 0 ? `- Rs ${p.loanDeduction.toFixed(0)}` : "—"}
                     </TableCell>
+                    <TableCell className="text-right text-sm text-late font-medium">
+                      {p.taxDeduction > 0 ? `- Rs ${p.taxDeduction.toFixed(0)} (${p.taxPercentage}%)` : "—"}
+                    </TableCell>
                     <TableCell className="text-right text-sm font-bold text-foreground">
                       Rs {p.netSalary.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                     </TableCell>
@@ -326,6 +348,9 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Tax Slab Settings */}
+      <TaxSlabSettings />
     </div>
   );
 };
