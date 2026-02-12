@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, CalendarDays, Clock, AlertTriangle, CheckCircle,
   ArrowLeft, Search, Filter, Download, MapPin, LogIn, LogOut,
-  Pencil, Trash2, MoreHorizontal,
+  Pencil, Trash2, MoreHorizontal, Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ const AdminDashboard = () => {
   const [deleteRecord, setDeleteRecord] = useState<any>(null);
   const [dateRange, setDateRange] = useState("today");
   const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [userRoles, setUserRoles] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -76,6 +78,12 @@ const AdminDashboard = () => {
 
       const { data: profs } = await supabase.from("profiles").select("*");
       setProfiles(profs || []);
+
+      // Fetch all user roles
+      const { data: allRoles } = await supabase.from("user_roles").select("*");
+      const rolesMap: Record<string, string> = {};
+      allRoles?.forEach((r) => { rolesMap[r.user_id] = r.role; });
+      setUserRoles(rolesMap);
 
       const today = new Date().toISOString().split("T")[0];
       const { data: att } = await supabase
@@ -468,6 +476,7 @@ const AdminDashboard = () => {
                     <TableHead>Employee</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Department</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>Today's Status</TableHead>
                     <TableHead>Joined</TableHead>
                   </TableRow>
@@ -475,7 +484,7 @@ const AdminDashboard = () => {
                 <TableBody>
                   {filteredProfiles.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No employees found
                       </TableCell>
                     </TableRow>
@@ -499,6 +508,33 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">{p.email || "—"}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{p.department || "—"}</TableCell>
+                          <TableCell>
+                            <Select
+                              value={userRoles[p.user_id] || "user"}
+                              onValueChange={async (newRole: "admin" | "user") => {
+                                const prevRole = userRoles[p.user_id] || "user";
+                                setUserRoles((prev) => ({ ...prev, [p.user_id]: newRole }));
+                                const { error } = await supabase
+                                  .from("user_roles")
+                                  .update({ role: newRole })
+                                  .eq("user_id", p.user_id);
+                                if (error) {
+                                  setUserRoles((prev) => ({ ...prev, [p.user_id]: prevRole }));
+                                  toast.error("Failed to update role");
+                                } else {
+                                  toast.success(`${p.name} role updated to ${newRole}`);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-[100px] h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={config.className}>{config.label}</Badge>
                           </TableCell>
