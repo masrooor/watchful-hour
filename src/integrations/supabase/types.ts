@@ -151,11 +151,15 @@ export type Database = {
       }
       employee_loans: {
         Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           description: string
           id: string
           is_active: boolean
           monthly_deduction: number
+          reason: string | null
           start_date: string
           total_amount: number
           total_deducted: number
@@ -163,11 +167,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           description: string
           id?: string
           is_active?: boolean
           monthly_deduction?: number
+          reason?: string | null
           start_date?: string
           total_amount?: number
           total_deducted?: number
@@ -175,11 +183,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           description?: string
           id?: string
           is_active?: boolean
           monthly_deduction?: number
+          reason?: string | null
           start_date?: string
           total_amount?: number
           total_deducted?: number
