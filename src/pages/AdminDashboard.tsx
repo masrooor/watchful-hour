@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditAttendanceDialog from "@/components/admin/EditAttendanceDialog";
 import DeleteAttendanceDialog from "@/components/admin/DeleteAttendanceDialog";
+import AddEmployeeDialog from "@/components/admin/AddEmployeeDialog";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -56,6 +57,7 @@ const AdminDashboard = () => {
   const [editRecord, setEditRecord] = useState<any>(null);
   const [deleteRecord, setDeleteRecord] = useState<any>(null);
   const [dateRange, setDateRange] = useState("today");
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -253,6 +255,10 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setShowAddEmployee(true)}>
+              <Users className="w-4 h-4 mr-1" />
+              Add Employee
+            </Button>
             <Button variant="outline" size="sm" onClick={exportCSV}>
               <Download className="w-4 h-4 mr-1" />
               Export CSV
@@ -513,6 +519,15 @@ const AdminDashboard = () => {
           onOpenChange={(open) => !open && setDeleteRecord(null)}
         />
       )}
+
+      <AddEmployeeDialog
+        open={showAddEmployee}
+        onOpenChange={setShowAddEmployee}
+        onSuccess={async () => {
+          const { data: profs } = await supabase.from("profiles").select("*");
+          setProfiles(profs || []);
+        }}
+      />
     </div>
   );
 };
