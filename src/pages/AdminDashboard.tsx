@@ -110,6 +110,7 @@ const AdminDashboard = () => {
   const [pwSaving, setPwSaving] = useState(false);
   const [pendingLeaves, setPendingLeaves] = useState(0);
   const [pendingLoans, setPendingLoans] = useState(0);
+  const [probationPeriodDays, setProbationPeriodDays] = useState(90);
 
   const handlePasswordChange = async () => {
     if (pwForm.newPassword.length < 6) {
@@ -191,6 +192,16 @@ const AdminDashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("approval_status", "pending");
       setPendingLoans(loanCount || 0);
+
+      // Fetch probation period setting
+      const { data: settingsData } = await supabase
+        .from("attendance_settings")
+        .select("probation_period_days")
+        .limit(1)
+        .single();
+      if (settingsData?.probation_period_days) {
+        setProbationPeriodDays(settingsData.probation_period_days);
+      }
 
       setLoading(false);
     };
@@ -350,6 +361,7 @@ const AdminDashboard = () => {
             attendance={attendance}
             pendingLeaves={pendingLeaves}
             pendingLoans={pendingLoans}
+            probationPeriodDays={probationPeriodDays}
             onNavigate={(section) => setActiveSection(section as AdminSection)}
           />
         );

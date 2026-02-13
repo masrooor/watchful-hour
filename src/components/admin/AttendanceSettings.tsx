@@ -26,6 +26,7 @@ interface AttendanceSettingsData {
   notify_employee_on_clockout: boolean;
   admin_notification_email: string | null;
   work_days: number[];
+  probation_period_days: number;
 }
 
 const AttendanceSettings = () => {
@@ -267,6 +268,35 @@ const AttendanceSettings = () => {
         workDays={settings.work_days}
         onWorkDaysChange={(days) => updateField("work_days", days)}
       />
+
+      {/* Probation Period */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-primary" />
+            <CardTitle className="text-lg">Probation Period</CardTitle>
+          </div>
+          <CardDescription>
+            Set the default probation period length for new employees.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-w-xs">
+            <Label htmlFor="probation-days">Probation Period (days)</Label>
+            <Input
+              id="probation-days"
+              type="number"
+              min={1}
+              max={365}
+              value={settings.probation_period_days}
+              onChange={(e) => updateField("probation_period_days", parseInt(e.target.value) || 90)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Employees on probation will be flagged {settings.probation_period_days} days after their joining date.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Save Button */}
       <div className="flex justify-end">

@@ -18,6 +18,7 @@ interface AdminDashboardOverviewProps {
   attendance: any[];
   pendingLeaves: number;
   pendingLoans: number;
+  probationPeriodDays: number;
   onNavigate: (section: string) => void;
 }
 
@@ -26,6 +27,7 @@ const AdminDashboardOverview = ({
   attendance,
   pendingLeaves,
   pendingLoans,
+  probationPeriodDays,
   onNavigate,
 }: AdminDashboardOverviewProps) => {
   const todayStats = useMemo(() => {
@@ -64,7 +66,7 @@ const AdminDashboardOverview = ({
     return results.sort((a, b) => a.daysUntil - b.daysUntil);
   }, [profiles]);
 
-  // Probation ending soon (next 30 days, assuming 90-day probation from joining_date)
+  // Probation ending soon (next 30 days, using configurable probation period)
   const probationEnding = useMemo(() => {
     const today = new Date();
     const results: { name: string; endDate: string; daysLeft: number; department: string }[] = [];
@@ -73,7 +75,7 @@ const AdminDashboardOverview = ({
       if (p.job_status !== "probation" || !p.joining_date) return;
       const joinDate = new Date(p.joining_date);
       const probEnd = new Date(joinDate);
-      probEnd.setDate(probEnd.getDate() + 90); // 90-day probation
+      probEnd.setDate(probEnd.getDate() + probationPeriodDays);
 
       const diffMs = probEnd.getTime() - today.getTime();
       const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
@@ -89,7 +91,7 @@ const AdminDashboardOverview = ({
     });
 
     return results.sort((a, b) => a.daysLeft - b.daysLeft);
-  }, [profiles]);
+  }, [profiles, probationPeriodDays]);
 
   const statCards = [
     { label: "Total Employees", value: todayStats.total, icon: Users, colorClass: "text-primary", bgClass: "bg-accent" },
