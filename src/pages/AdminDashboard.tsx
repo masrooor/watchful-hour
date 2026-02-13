@@ -3,14 +3,18 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, CalendarDays, Clock, AlertTriangle, CheckCircle,
   ArrowLeft, Search, Filter, Download, MapPin, LogIn, LogOut,
-  Pencil, Trash2, MoreHorizontal, Shield, Plus,
+  Pencil, Trash2, MoreHorizontal, Shield, Plus, Lock, Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -94,6 +98,30 @@ const AdminDashboard = () => {
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [editSalaryProfile, setEditSalaryProfile] = useState<any>(null);
   const [showAddAttendance, setShowAddAttendance] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwForm, setPwForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+
+  const handlePasswordChange = async () => {
+    if (pwForm.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setPwSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: pwForm.newPassword });
+    if (error) {
+      toast.error(error.message || "Failed to update password");
+    } else {
+      toast.success("Password updated successfully");
+      setPwForm({ newPassword: "", confirmPassword: "" });
+      setPwOpen(false);
+    }
+    setPwSaving(false);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -575,6 +603,10 @@ const AdminDashboard = () => {
                   Export CSV
                 </Button>
                 <NotificationBell />
+                <Button variant="outline" size="sm" onClick={() => setPwOpen(true)}>
+                  <Lock className="w-4 h-4 mr-1" />
+                  Change Password
+                </Button>
                 <Button variant="outline" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-1" />
                   Sign Out
@@ -713,6 +745,43 @@ const AdminDashboard = () => {
           setAllAttendance(allAtt || []);
         }}
       />
+
+      <Dialog open={pwOpen} onOpenChange={setPwOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="admin-new-pw">New Password</Label>
+              <Input
+                id="admin-new-pw"
+                type="password"
+                value={pwForm.newPassword}
+                onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+                placeholder="Min 6 characters"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-confirm-pw">Confirm Password</Label>
+              <Input
+                id="admin-confirm-pw"
+                type="password"
+                value={pwForm.confirmPassword}
+                onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                placeholder="Re-enter password"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPwOpen(false)}>Cancel</Button>
+            <Button onClick={handlePasswordChange} disabled={pwSaving}>
+              {pwSaving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              Update Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
