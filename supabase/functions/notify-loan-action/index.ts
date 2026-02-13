@@ -82,6 +82,14 @@ serve(async (req) => {
 
     const subject = `Loan ${actionLabel} - ${employeeName} (Rs ${loan.total_amount})`;
 
+    // Insert in-app notification
+    await supabase.from('notifications').insert({
+      user_id: loan.user_id,
+      title: `Loan ${actionLabel}`,
+      message: `Your loan "${loan.description}" for Rs ${loan.total_amount} has been ${actionLabel.toLowerCase()} by ${approverName || 'Admin'}.`,
+      type: 'loan',
+    });
+
     console.log(`[LOAN ${actionLabel.toUpperCase()}] To: ${employeeEmail}`);
     console.log(`[LOAN ${actionLabel.toUpperCase()}] Subject: ${subject}`);
     console.log(`[LOAN ${actionLabel.toUpperCase()}] Body: ${emailBody}`);

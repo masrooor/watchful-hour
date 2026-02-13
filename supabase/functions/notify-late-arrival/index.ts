@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +19,11 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const { employeeName, clockInTime, department, managerEmail } = await req.json();
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    const { employeeName, clockInTime, department, managerEmail, userId } = await req.json();
 
     if (!employeeName || !clockInTime) {
       return new Response(
@@ -58,6 +63,16 @@ serve(async (req) => {
     const aiData = await aiResponse.json();
     const notificationMessage = aiData.choices?.[0]?.message?.content || 
       `Late arrival: ${employeeName} clocked in at ${clockInTime}.`;
+
+    // Insert in-app notification for the employee
+    if (userId) {
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Late Arrival Recorded',
+        message: `You clocked in late at ${clockInTime}. Please ensure timely attendance.`,
+        type: 'attendance',
+      });
+    }
 
     // Log notification (in production, integrate with email service like Resend/SendGrid)
     console.log(`[LATE NOTIFICATION] To: ${managerEmail || 'hr@company.com'}`);
