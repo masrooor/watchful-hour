@@ -14,6 +14,7 @@ import {
   MinusCircle,
   LayoutDashboard,
   ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,11 +46,13 @@ export type AdminSection =
   | "monthly-report"
   | "loans"
   | "allowances-deductions"
-  | "audit-logs";
+  | "audit-logs"
+  | "role-management";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
   onSectionChange: (section: AdminSection) => void;
+  userRole?: string;
 }
 
 const menuGroups = [
@@ -98,13 +101,33 @@ const menuGroups = [
     label: "Security",
     icon: ShieldCheck,
     items: [
+      { id: "role-management" as const, label: "Role Management", icon: UserCog },
       { id: "audit-logs" as const, label: "Audit Logs", icon: ShieldCheck },
     ],
   },
 ];
 
-const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
+const MANAGER_SECTIONS: AdminSection[] = ["attendance", "analytics", "employees", "leaves", "loans"];
+const PAYROLL_SECTIONS: AdminSection[] = ["payroll", "allowances-deductions", "loans", "monthly-report"];
+
+const AdminSidebar = ({ activeSection, onSectionChange, userRole }: AdminSidebarProps) => {
   const navigate = useNavigate();
+
+  // Filter menu groups based on role
+  const allowedSections = userRole === 'manager'
+    ? MANAGER_SECTIONS
+    : userRole === 'payroll_officer'
+    ? PAYROLL_SECTIONS
+    : null; // admin/hr see everything
+
+  const filteredGroups = allowedSections
+    ? menuGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => allowedSections.includes(item.id)),
+        }))
+        .filter((group) => group.items.length > 0)
+    : menuGroups;
 
   return (
     <Sidebar>
@@ -126,7 +149,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
         </Button>
       </SidebarHeader>
       <SidebarContent>
-        {menuGroups.map((group) => {
+        {filteredGroups.map((group) => {
           const groupActive = group.items.some((i) => i.id === activeSection);
           return (
             <Collapsible key={group.label} defaultOpen={groupActive}>
