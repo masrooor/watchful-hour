@@ -35,6 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export type AdminSection =
+  | "dashboard"
   | "attendance"
   | "analytics"
   | "settings"
@@ -56,6 +57,13 @@ interface AdminSidebarProps {
 }
 
 const menuGroups = [
+  {
+    label: "Overview",
+    icon: LayoutDashboard,
+    items: [
+      { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
   {
     label: "Attendance",
     icon: CalendarDays,
@@ -107,8 +115,8 @@ const menuGroups = [
   },
 ];
 
-const MANAGER_SECTIONS: AdminSection[] = ["attendance", "analytics", "employees", "leaves", "loans"];
-const PAYROLL_SECTIONS: AdminSection[] = ["payroll", "allowances-deductions", "loans", "monthly-report"];
+const MANAGER_SECTIONS: AdminSection[] = ["dashboard", "attendance", "analytics", "employees", "leaves", "loans"];
+const PAYROLL_SECTIONS: AdminSection[] = ["dashboard", "payroll", "allowances-deductions", "loans", "monthly-report"];
 
 const AdminSidebar = ({ activeSection, onSectionChange, userRole }: AdminSidebarProps) => {
   const navigate = useNavigate();

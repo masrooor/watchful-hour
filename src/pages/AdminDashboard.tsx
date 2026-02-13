@@ -54,6 +54,7 @@ import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
 import AuditLogViewer from "@/components/admin/AuditLogViewer";
 import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesDeductions";
 import RoleManagement from "@/components/admin/RoleManagement";
+import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import { logAudit } from "@/lib/auditLog";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -65,6 +66,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 };
 
 const sectionTitles: Record<AdminSection, string> = {
+  dashboard: "Dashboard",
   attendance: "Attendance Records",
   analytics: "Attendance Analytics",
   settings: "Attendance Settings",
@@ -83,7 +85,7 @@ const sectionTitles: Record<AdminSection, string> = {
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<AdminSection>("attendance");
+  const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const [profiles, setProfiles] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [allAttendance, setAllAttendance] = useState<any[]>([]);
@@ -105,6 +107,8 @@ const AdminDashboard = () => {
   const [pwOpen, setPwOpen] = useState(false);
   const [pwForm, setPwForm] = useState({ newPassword: "", confirmPassword: "" });
   const [pwSaving, setPwSaving] = useState(false);
+  const [pendingLeaves, setPendingLeaves] = useState(0);
+  const [pendingLoans, setPendingLoans] = useState(0);
 
   const handlePasswordChange = async () => {
     if (pwForm.newPassword.length < 6) {
@@ -173,6 +177,19 @@ const AdminDashboard = () => {
         .order("date", { ascending: false })
         .limit(500);
       setAllAttendance(allAtt || []);
+
+      // Fetch pending counts
+      const { count: leaveCount } = await supabase
+        .from("leave_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      setPendingLeaves(leaveCount || 0);
+
+      const { count: loanCount } = await supabase
+        .from("employee_loans")
+        .select("*", { count: "exact", head: true })
+        .eq("approval_status", "pending");
+      setPendingLoans(loanCount || 0);
 
       setLoading(false);
     };
@@ -325,6 +342,16 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "dashboard":
+        return (
+          <AdminDashboardOverview
+            profiles={profiles}
+            attendance={attendance}
+            pendingLeaves={pendingLeaves}
+            pendingLoans={pendingLoans}
+            onNavigate={(section) => setActiveSection(section as AdminSection)}
+          />
+        );
       case "attendance":
         return (
           <div className="glass-card rounded-xl overflow-hidden">
