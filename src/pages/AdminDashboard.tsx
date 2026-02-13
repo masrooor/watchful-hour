@@ -684,10 +684,12 @@ const AdminDashboard = () => {
                     Add Attendance
                   </Button>
                 )}
-                <Button size="sm" onClick={() => setShowAddEmployee(true)}>
-                  <Users className="w-4 h-4 mr-1" />
-                  Add Employee
-                </Button>
+                {activeSection === "employees" && (
+                  <Button size="sm" onClick={() => setShowAddEmployee(true)}>
+                    <Users className="w-4 h-4 mr-1" />
+                    Add Employee
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={exportCSV}>
                   <Download className="w-4 h-4 mr-1" />
                   Export CSV
