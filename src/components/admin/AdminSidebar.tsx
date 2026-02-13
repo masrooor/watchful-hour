@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   ShieldCheck,
   UserCog,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +49,8 @@ export type AdminSection =
   | "loans"
   | "allowances-deductions"
   | "audit-logs"
-  | "role-management";
+  | "role-management"
+  | "change-password";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -111,6 +113,7 @@ const menuGroups = [
     items: [
       { id: "role-management" as const, label: "Role Management", icon: UserCog },
       { id: "audit-logs" as const, label: "Audit Logs", icon: ShieldCheck },
+      { id: "change-password" as const, label: "Change Password", icon: Lock },
     ],
   },
 ];
