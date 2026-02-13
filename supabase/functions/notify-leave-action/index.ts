@@ -92,6 +92,14 @@ serve(async (req) => {
 
     const subject = `Leave ${actionLabel} - ${employeeName} (${leaveTypeLabel}, ${days} days)`;
 
+    // Insert in-app notification
+    await supabase.from('notifications').insert({
+      user_id: leave.user_id,
+      title: `Leave ${actionLabel}`,
+      message: `Your ${leaveTypeLabel} leave (${leave.start_date} to ${leave.end_date}, ${days} days) has been ${actionLabel.toLowerCase()} by ${approverName || 'Admin'}.`,
+      type: 'leave',
+    });
+
     // Log the emails (in production, integrate with Resend/SendGrid)
     console.log(`[LEAVE ${actionLabel.toUpperCase()}] To Employee: ${employeeEmail}`);
     console.log(`[LEAVE ${actionLabel.toUpperCase()}] Subject: ${subject}`);

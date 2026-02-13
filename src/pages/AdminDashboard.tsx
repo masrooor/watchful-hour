@@ -50,6 +50,7 @@ import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
 import AuditLogViewer from "@/components/admin/AuditLogViewer";
 import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesDeductions";
 import { logAudit } from "@/lib/auditLog";
+import NotificationBell from "@/components/NotificationBell";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -573,6 +574,7 @@ const AdminDashboard = () => {
                   <Download className="w-4 h-4 mr-1" />
                   Export CSV
                 </Button>
+                <NotificationBell />
                 <Button variant="outline" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-1" />
                   Sign Out

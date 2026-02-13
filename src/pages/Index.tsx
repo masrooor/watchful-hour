@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { AttendanceStats } from "@/types/attendance";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import NotificationBell from "@/components/NotificationBell";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -175,7 +176,7 @@ const Index = () => {
           <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
             <div className="px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
               <SidebarTrigger />
-              <div>
+              <div className="flex-1">
                 <h1 className="text-lg font-semibold text-foreground">
                   {activeSection === "dashboard" ? "Dashboard" :
                    activeSection === "profile" ? "My Profile" :
@@ -185,6 +186,7 @@ const Index = () => {
                    "Announcements"}
                 </h1>
               </div>
+              <NotificationBell />
             </div>
           </header>
           <div className="p-4 sm:p-6 lg:p-8">
