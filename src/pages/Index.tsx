@@ -36,9 +36,11 @@ const Index = () => {
         .select('role')
         .eq('user_id', user.id);
       const admin = roles?.some(r => r.role === 'admin') ?? false;
+      const hasAdminAccess = admin || 
+        (roles?.some(r => ['hr', 'manager', 'payroll_officer'].includes(r.role)) ?? false);
       setIsAdmin(admin);
 
-      if (admin) {
+      if (hasAdminAccess) {
         setRedirecting(true);
         navigate('/admin', { replace: true });
         return;

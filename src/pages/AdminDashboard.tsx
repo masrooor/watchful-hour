@@ -53,6 +53,7 @@ import EditSalaryDialog from "@/components/admin/EditSalaryDialog";
 import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
 import AuditLogViewer from "@/components/admin/AuditLogViewer";
 import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesDeductions";
+import RoleManagement from "@/components/admin/RoleManagement";
 import { logAudit } from "@/lib/auditLog";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -76,6 +77,7 @@ const sectionTitles: Record<AdminSection, string> = {
   loans: "Loans & Deductions",
   "allowances-deductions": "Allowances & Deductions",
   "audit-logs": "Audit Logs",
+  "role-management": "Role Management",
 };
 
 const AdminDashboard = () => {
@@ -87,6 +89,8 @@ const AdminDashboard = () => {
   const [allAttendance, setAllAttendance] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isHR, setIsHR] = useState(false);
+  const [isManager, setIsManager] = useState(false);
+  const [isPayrollOfficer, setIsPayrollOfficer] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
@@ -134,10 +138,19 @@ const AdminDashboard = () => {
 
       const admin = roles?.some((r) => r.role === "admin") ?? false;
       const hr = roles?.some((r) => r.role === "hr") ?? false;
+      const manager = roles?.some((r) => r.role === "manager") ?? false;
+      const payrollOfficer = roles?.some((r) => r.role === "payroll_officer") ?? false;
       setIsAdmin(admin);
       setIsHR(hr);
+      setIsManager(manager);
+      setIsPayrollOfficer(payrollOfficer);
 
-      if (!admin && !hr) return;
+      if (!admin && !hr && !manager && !payrollOfficer) return;
+
+      // Set default section based on role
+      if (!admin && !hr && !manager && payrollOfficer) {
+        setActiveSection("payroll");
+      }
 
       const { data: profs } = await supabase.from("profiles").select("*");
       setProfiles(profs || []);
@@ -273,13 +286,13 @@ const AdminDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (isAdmin === false && !isHR) {
+  if (isAdmin === false && !isHR && !isManager && !isPayrollOfficer) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <AlertTriangle className="w-12 h-12 text-warning mx-auto" />
           <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
-          <p className="text-muted-foreground">You need admin or HR privileges to view this page.</p>
+          <p className="text-muted-foreground">You need appropriate privileges to view this page.</p>
           <Button onClick={() => navigate("/")}>Go to Dashboard</Button>
         </div>
       </div>
@@ -565,6 +578,9 @@ const AdminDashboard = () => {
       case "audit-logs":
         return <AuditLogViewer profileMap={profileMap} />;
 
+      case "role-management":
+        return <RoleManagement profiles={profiles} />;
+
       default:
         return null;
     }
@@ -573,7 +589,11 @@ const AdminDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+        <AdminSidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          userRole={isAdmin ? 'admin' : isHR ? 'hr' : isManager ? 'manager' : isPayrollOfficer ? 'payroll_officer' : 'user'}
+        />
         <SidebarInset>
           <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
             <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
