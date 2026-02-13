@@ -80,6 +80,7 @@ const sectionTitles: Record<AdminSection, string> = {
   "allowances-deductions": "Allowances & Deductions",
   "audit-logs": "Audit Logs",
   "role-management": "Role Management",
+  "change-password": "Change Password",
 };
 
 const AdminDashboard = () => {
@@ -608,6 +609,36 @@ const AdminDashboard = () => {
       case "role-management":
         return <RoleManagement profiles={profiles} />;
 
+      case "change-password":
+        return (
+          <div className="max-w-md space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-new-pw">New Password</Label>
+              <Input
+                id="admin-new-pw"
+                type="password"
+                value={pwForm.newPassword}
+                onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+                placeholder="Min 6 characters"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-confirm-pw">Confirm Password</Label>
+              <Input
+                id="admin-confirm-pw"
+                type="password"
+                value={pwForm.confirmPassword}
+                onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                placeholder="Re-enter password"
+              />
+            </div>
+            <Button onClick={handlePasswordChange} disabled={pwSaving}>
+              {pwSaving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              Update Password
+            </Button>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -650,10 +681,6 @@ const AdminDashboard = () => {
                   Export CSV
                 </Button>
                 <NotificationBell />
-                <Button variant="outline" size="sm" onClick={() => setPwOpen(true)}>
-                  <Lock className="w-4 h-4 mr-1" />
-                  Change Password
-                </Button>
                 <Button variant="outline" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-1" />
                   Sign Out
