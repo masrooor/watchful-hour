@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const PROBATION_DAYS = 90;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,6 +22,14 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Fetch configurable probation period
+    const { data: settingsData } = await supabase
+      .from('attendance_settings')
+      .select('probation_period_days')
+      .limit(1)
+      .single();
+    const PROBATION_DAYS = settingsData?.probation_period_days || 90;
 
     // Find employees on probation with a joining_date
     const { data: probationEmployees, error: profError } = await supabase

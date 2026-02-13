@@ -106,6 +106,7 @@ export type Database = {
           notify_employee_on_late: boolean
           office_end_time: string
           office_start_time: string
+          probation_period_days: number
           updated_at: string
           work_days: number[]
         }
@@ -125,6 +126,7 @@ export type Database = {
           notify_employee_on_late?: boolean
           office_end_time?: string
           office_start_time?: string
+          probation_period_days?: number
           updated_at?: string
           work_days?: number[]
         }
@@ -144,6 +146,7 @@ export type Database = {
           notify_employee_on_late?: boolean
           office_end_time?: string
           office_start_time?: string
+          probation_period_days?: number
           updated_at?: string
           work_days?: number[]
         }
