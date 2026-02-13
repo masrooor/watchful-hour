@@ -1,1 +1,4 @@
 project_id = "lbiqislcuasqedllgqli"
+
+[functions.notify-probation-ending]
+verify_jwt = false
