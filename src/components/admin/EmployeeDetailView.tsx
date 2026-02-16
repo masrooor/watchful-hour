@@ -1,17 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   ArrowLeft, User, CalendarDays, TreePalm, Wallet, FileText,
-  Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut,
+  Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut, Timer, AlertTriangle,
 } from "lucide-react";
+
+const REQUIRED_DAILY_HOURS = 9;
+
+const calcHours = (clockIn: string | null, clockOut: string | null): number | null => {
+  if (!clockIn || !clockOut) return null;
+  const diff = (new Date(clockOut).getTime() - new Date(clockIn).getTime()) / 3600000;
+  return Math.round(diff * 100) / 100;
+};
+
+const formatHours = (h: number | null): string => {
+  if (h === null) return "—";
+  const hrs = Math.floor(h);
+  const mins = Math.round((h - hrs) * 60);
+  return `${hrs}h ${mins}m`;
+};
 
 interface EmployeeDetailViewProps {
   profile: any;
@@ -33,22 +49,30 @@ const leaveStatusColors: Record<string, string> = {
 
 const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<any>(null);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
   const [allowances, setAllowances] = useState<any[]>([]);
   const [deductions, setDeductions] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
+  const [holidays, setHolidays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [attRes, balRes, leavesRes, loansRes, allowRes, dedRes] = await Promise.all([
+      const [attRes, balRes, leavesRes, loansRes, allowRes, dedRes, settingsRes] = await Promise.all([
         supabase.from("attendance_records").select("*").eq("user_id", profile.user_id).order("date", { ascending: false }).limit(30),
         supabase.from("leave_balances").select("*").eq("user_id", profile.user_id).eq("year", new Date().getFullYear()).maybeSingle(),
         supabase.from("leave_requests").select("*").eq("user_id", profile.user_id).order("created_at", { ascending: false }).limit(20),
         supabase.from("employee_loans").select("*").eq("user_id", profile.user_id).order("created_at", { ascending: false }),
         supabase.from("employee_allowances").select("*").eq("user_id", profile.user_id),
         supabase.from("employee_deductions").select("*").eq("user_id", profile.user_id),
+        supabase.from("attendance_settings").select("*").limit(1).single(),
       ]);
       setAttendance(attRes.data || []);
       setLeaveBalance(balRes.data);
@@ -56,10 +80,61 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
       setLoans(loansRes.data || []);
       setAllowances(allowRes.data || []);
       setDeductions(dedRes.data || []);
+      setSettings(settingsRes.data);
       setLoading(false);
     };
     fetchAll();
   }, [profile.user_id]);
+
+  // Fetch monthly attendance and holidays when month/year changes
+  useEffect(() => {
+    const fetchMonthly = async () => {
+      const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
+      const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
+      const [attRes, holRes] = await Promise.all([
+        supabase.from("attendance_records").select("*").eq("user_id", profile.user_id).gte("date", startDate).lte("date", endDate).order("date", { ascending: true }),
+        supabase.from("holidays").select("*").gte("date", startDate).lte("date", endDate),
+      ]);
+      setMonthlyAttendance(attRes.data || []);
+      setHolidays(holRes.data || []);
+    };
+    fetchMonthly();
+  }, [profile.user_id, selectedMonth, selectedYear]);
+
+  const workDays = settings?.work_days || [1, 2, 3, 4, 5, 6];
+  const holidayDates = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
+
+  const monthlyHoursSummary = useMemo(() => {
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    let totalWorkingDays = 0;
+    const today = new Date();
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(selectedYear, selectedMonth, d);
+      const dateStr = date.toISOString().split("T")[0];
+      if (date <= today && workDays.includes(date.getDay()) && !holidayDates.has(dateStr)) {
+        totalWorkingDays++;
+      }
+    }
+
+    const requiredHours = totalWorkingDays * REQUIRED_DAILY_HOURS;
+    let actualHours = 0;
+    let daysWorked = 0;
+
+    monthlyAttendance.forEach((a) => {
+      const h = calcHours(a.clock_in, a.clock_out);
+      if (h !== null) {
+        actualHours += h;
+        daysWorked++;
+      }
+    });
+
+    const shortfall = Math.max(0, requiredHours - actualHours);
+    const overtime = Math.max(0, actualHours - requiredHours);
+    const completionPct = requiredHours > 0 ? Math.min(100, (actualHours / requiredHours) * 100) : 0;
+
+    return { totalWorkingDays, requiredHours, actualHours, shortfall, overtime, completionPct, daysWorked };
+  }, [monthlyAttendance, selectedMonth, selectedYear, workDays, holidayDates]);
 
   const initials = (profile.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
@@ -147,58 +222,146 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
 
         {/* Attendance Tab */}
         <TabsContent value="attendance">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Recent Attendance (Last 30 Records)</CardTitle></CardHeader>
-            <CardContent>
-              {loading ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">Loading...</p>
-              ) : attendance.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No attendance records</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Clock In</TableHead>
-                      <TableHead>Clock Out</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {attendance.map((a) => {
-                      const config = statusConfig[a.status] || statusConfig.pending;
-                      return (
-                        <TableRow key={a.id}>
-                          <TableCell className="text-sm">{a.date}</TableCell>
-                          <TableCell className="text-sm">
-                            {a.clock_in ? (
-                              <span className="flex items-center gap-1">
-                                <LogIn className="w-3.5 h-3.5 text-muted-foreground" />
-                                {new Date(a.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                            ) : "—"}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {a.clock_out ? (
-                              <span className="flex items-center gap-1">
-                                <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
-                                {new Date(a.clock_out).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                            ) : "—"}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{a.location_name || "—"}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={config.className}>{config.label}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {/* Month/Year Selector */}
+            <div className="flex items-center gap-3">
+              <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                <SelectTrigger className="w-[140px]">
+                  <CalendarDays className="w-4 h-4 mr-1" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
+                    <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Monthly Hours Summary */}
+            <Card>
+              <CardHeader><CardTitle className="text-base flex items-center gap-2"><Timer className="w-4 h-4" /> Monthly Hours Summary</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <div className="rounded-lg border border-border p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Working Days</p>
+                    <p className="text-lg font-bold text-foreground">{monthlyHoursSummary.totalWorkingDays}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Days Worked</p>
+                    <p className="text-lg font-bold text-foreground">{monthlyHoursSummary.daysWorked}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Required Hours</p>
+                    <p className="text-lg font-bold text-foreground">{formatHours(monthlyHoursSummary.requiredHours)}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Actual Hours</p>
+                    <p className="text-lg font-bold text-primary">{formatHours(monthlyHoursSummary.actualHours)}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Short Hours</p>
+                    <p className={`text-lg font-bold ${monthlyHoursSummary.shortfall > 0 ? "text-destructive" : "text-on-time"}`}>
+                      {monthlyHoursSummary.shortfall > 0 ? formatHours(monthlyHoursSummary.shortfall) : "None"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Overtime</p>
+                    <p className={`text-lg font-bold ${monthlyHoursSummary.overtime > 0 ? "text-on-time" : "text-muted-foreground"}`}>
+                      {monthlyHoursSummary.overtime > 0 ? formatHours(monthlyHoursSummary.overtime) : "None"}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Hours Completion</span>
+                    <span>{monthlyHoursSummary.completionPct.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={monthlyHoursSummary.completionPct} className="h-2" />
+                  {monthlyHoursSummary.shortfall > 0 && (
+                    <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Employee is {formatHours(monthlyHoursSummary.shortfall)} short of required hours this month
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Daily Attendance with Hours */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Daily Attendance</CardTitle></CardHeader>
+              <CardContent>
+                {monthlyAttendance.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No attendance records for this month</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Clock In</TableHead>
+                        <TableHead>Clock Out</TableHead>
+                        <TableHead>Hours Worked</TableHead>
+                        <TableHead>Short/Over</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {monthlyAttendance.map((a) => {
+                        const config = statusConfig[a.status] || statusConfig.pending;
+                        const hours = calcHours(a.clock_in, a.clock_out);
+                        const diff = hours !== null ? hours - REQUIRED_DAILY_HOURS : null;
+                        return (
+                          <TableRow key={a.id}>
+                            <TableCell className="text-sm">{a.date}</TableCell>
+                            <TableCell className="text-sm">
+                              {a.clock_in ? (
+                                <span className="flex items-center gap-1">
+                                  <LogIn className="w-3.5 h-3.5 text-muted-foreground" />
+                                  {new Date(a.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              ) : "—"}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {a.clock_out ? (
+                                <span className="flex items-center gap-1">
+                                  <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
+                                  {new Date(a.clock_out).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              ) : "—"}
+                            </TableCell>
+                            <TableCell className="text-sm font-medium">
+                              {formatHours(hours)}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {diff !== null ? (
+                                <span className={diff >= 0 ? "text-on-time" : "text-destructive"}>
+                                  {diff >= 0 ? `+${formatHours(diff)}` : `-${formatHours(Math.abs(diff))}`}
+                                </span>
+                              ) : "—"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={config.className}>{config.label}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Leaves Tab */}
