@@ -55,6 +55,7 @@ import AuditLogViewer from "@/components/admin/AuditLogViewer";
 import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesDeductions";
 import RoleManagement from "@/components/admin/RoleManagement";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
+import EmployeeDetailView from "@/components/admin/EmployeeDetailView";
 import { logAudit } from "@/lib/auditLog";
 import NotificationBell from "@/components/NotificationBell";
 import ClockInWidget from "@/components/ClockInWidget";
@@ -82,6 +83,7 @@ const sectionTitles: Record<AdminSection, string> = {
   "audit-logs": "Audit Logs",
   "role-management": "Role Management",
   "change-password": "Change Password",
+  "employee-detail": "Employee Details",
 };
 
 const AdminDashboard = () => {
@@ -106,6 +108,7 @@ const AdminDashboard = () => {
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [editSalaryProfile, setEditSalaryProfile] = useState<any>(null);
   const [showAddAttendance, setShowAddAttendance] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [pwOpen, setPwOpen] = useState(false);
   const [pwForm, setPwForm] = useState({ newPassword: "", confirmPassword: "" });
   const [pwSaving, setPwSaving] = useState(false);
@@ -524,7 +527,7 @@ const AdminDashboard = () => {
                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
                               {(p.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                             </div>
-                            <span className="font-medium text-sm text-foreground">{p.name || "Unknown"}</span>
+                            <button className="font-medium text-sm text-primary hover:underline text-left" onClick={() => { setSelectedEmployee(p); setActiveSection("employee-detail"); }}>{p.name || "Unknown"}</button>
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{p.email || "—"}</TableCell>
@@ -654,6 +657,17 @@ const AdminDashboard = () => {
             </Button>
           </div>
         );
+
+      case "employee-detail":
+        return selectedEmployee ? (
+          <EmployeeDetailView
+            profile={selectedEmployee}
+            onBack={() => {
+              setSelectedEmployee(null);
+              setActiveSection("employees");
+            }}
+          />
+        ) : null;
 
       default:
         return null;
