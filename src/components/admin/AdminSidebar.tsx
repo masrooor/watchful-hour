@@ -50,7 +50,8 @@ export type AdminSection =
   | "allowances-deductions"
   | "audit-logs"
   | "role-management"
-  | "change-password";
+  | "change-password"
+  | "employee-detail";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
