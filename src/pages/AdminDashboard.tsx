@@ -358,7 +358,7 @@ const AdminDashboard = () => {
       case "dashboard":
         return (
           <div className="space-y-6">
-            {isHR && <ClockInWidget />}
+            {(isHR || isManager) && <ClockInWidget />}
             <AdminDashboardOverview
               profiles={profiles}
               attendance={attendance}
