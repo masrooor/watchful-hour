@@ -57,6 +57,7 @@ import RoleManagement from "@/components/admin/RoleManagement";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import { logAudit } from "@/lib/auditLog";
 import NotificationBell from "@/components/NotificationBell";
+import ClockInWidget from "@/components/ClockInWidget";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   "on-time": { label: "On Time", className: "bg-on-time/10 text-on-time border-on-time/20" },
@@ -356,14 +357,17 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case "dashboard":
         return (
-          <AdminDashboardOverview
-            profiles={profiles}
-            attendance={attendance}
-            pendingLeaves={pendingLeaves}
-            pendingLoans={pendingLoans}
-            probationPeriodDays={probationPeriodDays}
-            onNavigate={(section) => setActiveSection(section as AdminSection)}
-          />
+          <div className="space-y-6">
+            {isHR && <ClockInWidget />}
+            <AdminDashboardOverview
+              profiles={profiles}
+              attendance={attendance}
+              pendingLeaves={pendingLeaves}
+              pendingLoans={pendingLoans}
+              probationPeriodDays={probationPeriodDays}
+              onNavigate={(section) => setActiveSection(section as AdminSection)}
+            />
+          </div>
         );
       case "attendance":
         return (
