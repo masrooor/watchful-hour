@@ -14,7 +14,7 @@ import {
   Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut, Timer, AlertTriangle,
 } from "lucide-react";
 
-const REQUIRED_DAILY_HOURS = 9;
+const DEFAULT_REQUIRED_DAILY_HOURS = 9;
 
 const calcHours = (clockIn: string | null, clockOut: string | null): number | null => {
   if (!clockIn || !clockOut) return null;
@@ -102,6 +102,7 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
   }, [profile.user_id, selectedMonth, selectedYear]);
 
   const workDays = settings?.work_days || [1, 2, 3, 4, 5, 6];
+  const requiredDailyHours = Number(settings?.required_daily_hours) || DEFAULT_REQUIRED_DAILY_HOURS;
   const holidayDates = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
   const monthlyHoursSummary = useMemo(() => {
@@ -117,7 +118,7 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
       }
     }
 
-    const requiredHours = totalWorkingDays * REQUIRED_DAILY_HOURS;
+    const requiredHours = totalWorkingDays * requiredDailyHours;
     let actualHours = 0;
     let daysWorked = 0;
 
@@ -320,7 +321,7 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
                       {monthlyAttendance.map((a) => {
                         const config = statusConfig[a.status] || statusConfig.pending;
                         const hours = calcHours(a.clock_in, a.clock_out);
-                        const diff = hours !== null ? hours - REQUIRED_DAILY_HOURS : null;
+                        const diff = hours !== null ? hours - requiredDailyHours : null;
                         return (
                           <TableRow key={a.id}>
                             <TableCell className="text-sm">{a.date}</TableCell>

@@ -1,0 +1,1 @@
+ALTER TABLE public.attendance_settings ADD COLUMN required_daily_hours numeric NOT NULL DEFAULT 9;
