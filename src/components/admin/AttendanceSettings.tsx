@@ -27,6 +27,7 @@ interface AttendanceSettingsData {
   admin_notification_email: string | null;
   work_days: number[];
   probation_period_days: number;
+  required_daily_hours: number;
 }
 
 const AttendanceSettings = () => {
@@ -268,6 +269,36 @@ const AttendanceSettings = () => {
         workDays={settings.work_days}
         onWorkDaysChange={(days) => updateField("work_days", days)}
       />
+
+      {/* Required Daily Hours */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-primary" />
+            <CardTitle className="text-lg">Required Daily Hours</CardTitle>
+          </div>
+          <CardDescription>
+            Set the required working hours per day (including lunch break) used for monthly hour calculations.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-w-xs">
+            <Label htmlFor="daily-hours">Hours per Day</Label>
+            <Input
+              id="daily-hours"
+              type="number"
+              min={1}
+              max={24}
+              step={0.5}
+              value={settings.required_daily_hours}
+              onChange={(e) => updateField("required_daily_hours", parseFloat(e.target.value) || 9)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Employees are expected to work {settings.required_daily_hours} hours per day. Shortfalls will be flagged in monthly reports.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Probation Period */}
       <Card>
