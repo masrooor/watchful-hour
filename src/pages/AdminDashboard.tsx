@@ -365,6 +365,7 @@ const AdminDashboard = () => {
             <AdminDashboardOverview
               profiles={profiles}
               attendance={attendance}
+              allAttendance={allAttendance}
               pendingLeaves={pendingLeaves}
               pendingLoans={pendingLoans}
               probationPeriodDays={probationPeriodDays}

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import DashboardCharts from "./DashboardCharts";
 import {
   Cake,
   Clock,
@@ -16,6 +17,7 @@ import {
 interface AdminDashboardOverviewProps {
   profiles: any[];
   attendance: any[];
+  allAttendance: any[];
   pendingLeaves: number;
   pendingLoans: number;
   probationPeriodDays: number;
@@ -25,6 +27,7 @@ interface AdminDashboardOverviewProps {
 const AdminDashboardOverview = ({
   profiles,
   attendance,
+  allAttendance,
   pendingLeaves,
   pendingLoans,
   probationPeriodDays,
@@ -263,6 +266,9 @@ const AdminDashboardOverview = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Charts Section */}
+      <DashboardCharts profiles={profiles} allAttendance={allAttendance} />
     </div>
   );
 };
