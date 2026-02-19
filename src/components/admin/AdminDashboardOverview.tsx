@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import DashboardCharts from "./DashboardCharts";
+import LiveClockInPanel from "./LiveClockInPanel";
+import QuickActionButtons from "./QuickActionButtons";
 import {
   Cake,
   Clock,
@@ -21,7 +23,9 @@ interface AdminDashboardOverviewProps {
   pendingLeaves: number;
   pendingLoans: number;
   probationPeriodDays: number;
+  isAdmin: boolean;
   onNavigate: (section: string) => void;
+  onAddEmployee: () => void;
 }
 
 const AdminDashboardOverview = ({
@@ -31,7 +35,9 @@ const AdminDashboardOverview = ({
   pendingLeaves,
   pendingLoans,
   probationPeriodDays,
+  isAdmin,
   onNavigate,
+  onAddEmployee,
 }: AdminDashboardOverviewProps) => {
   const todayStats = useMemo(() => {
     const total = profiles.length;
@@ -265,6 +271,12 @@ const AdminDashboardOverview = ({
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Actions + Live Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <QuickActionButtons onNavigate={onNavigate} onAddEmployee={onAddEmployee} isAdmin={isAdmin} />
+        <LiveClockInPanel profiles={profiles} attendance={attendance} />
       </div>
 
       {/* Charts Section */}
