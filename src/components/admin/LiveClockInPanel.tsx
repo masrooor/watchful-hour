@@ -16,13 +16,26 @@ const LiveClockInPanel = ({ profiles, attendance }: LiveClockInPanelProps) => {
   );
 
   const { clockedIn, clockedOut, notYet } = useMemo(() => {
-    const attendanceMap = new Map(attendance.map((a) => [a.user_id, a]));
+    // Group attendance by user, check if any open session exists
+    const userLatest = new Map<string, any>();
+    attendance.forEach((a) => {
+      const existing = userLatest.get(a.user_id);
+      // If user has an open session (clock_in but no clock_out), prioritize it
+      if (!existing) {
+        userLatest.set(a.user_id, a);
+      } else if (a.clock_in && !a.clock_out) {
+        userLatest.set(a.user_id, a);
+      } else if (!existing.clock_in || (existing.clock_out && a.clock_in && new Date(a.clock_in) > new Date(existing.clock_in))) {
+        userLatest.set(a.user_id, a);
+      }
+    });
+
     const clockedIn: { profile: any; record: any }[] = [];
     const clockedOut: { profile: any; record: any }[] = [];
     const notYet: any[] = [];
 
     profiles.forEach((p) => {
-      const record = attendanceMap.get(p.user_id);
+      const record = userLatest.get(p.user_id);
       if (record?.clock_in && !record?.clock_out) {
         clockedIn.push({ profile: p, record });
       } else if (record?.clock_out) {

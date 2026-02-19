@@ -19,7 +19,7 @@ export const useAttendance = () => {
 
       const { data, error } = await supabase
         .from('attendance_records')
-        .upsert({
+        .insert({
           user_id: user.id,
           date: now.toISOString().split('T')[0],
           clock_in: now.toISOString(),
@@ -27,7 +27,7 @@ export const useAttendance = () => {
           latitude,
           longitude,
           location_name: locationName,
-        }, { onConflict: 'user_id,date' })
+        })
         .select()
         .single();
 
@@ -81,11 +81,15 @@ export const useAttendance = () => {
       const today = now.toISOString().split('T')[0];
       const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
+      // Find the latest open record (clocked in but not out) for today
       const { data, error } = await supabase
         .from('attendance_records')
         .update({ clock_out: now.toISOString() })
         .eq('user_id', user.id)
         .eq('date', today)
+        .is('clock_out', null)
+        .order('clock_in', { ascending: false })
+        .limit(1)
         .select()
         .single();
 
