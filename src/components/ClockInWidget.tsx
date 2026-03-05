@@ -106,7 +106,7 @@ const ClockInWidget = () => {
               isClockedIn
                 ? "bg-destructive text-destructive-foreground shadow-[0_0_30px_-5px_hsl(var(--destructive)/0.4)]"
                 : "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)]"
-            }`
+            }`}
           >
             {loading ? (
               <Loader2 className="w-8 h-8 animate-spin" />
