@@ -380,6 +380,7 @@ export type Database = {
           id: string
           leave_type: string
           reason: string | null
+          rejection_reason: string | null
           start_date: string
           status: string
           updated_at: string
@@ -393,6 +394,7 @@ export type Database = {
           id?: string
           leave_type?: string
           reason?: string | null
+          rejection_reason?: string | null
           start_date: string
           status?: string
           updated_at?: string
@@ -406,6 +408,7 @@ export type Database = {
           id?: string
           leave_type?: string
           reason?: string | null
+          rejection_reason?: string | null
           start_date?: string
           status?: string
           updated_at?: string
