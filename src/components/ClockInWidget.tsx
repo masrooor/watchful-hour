@@ -100,7 +100,7 @@ const ClockInWidget = () => {
             disabled={loading}
             className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm ${
               isClockedIn
-                ? "bg-on-time text-on-time-foreground shadow-[0_0_30px_-5px_hsl(var(--on-time)/0.4)]"
+                ? "bg-destructive text-destructive-foreground shadow-[0_0_30px_-5px_hsl(var(--destructive)/0.4)]"
                 : "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)]"
             } hover:scale-105 active:scale-95`}
           >
