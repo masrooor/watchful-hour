@@ -60,6 +60,9 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
   const [loading, setLoading] = useState(true);
   const [showApply, setShowApply] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectingLeaveId, setRejectingLeaveId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [form, setForm] = useState({
     leave_type: "casual",
     start_date: "",
@@ -125,10 +128,28 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
     }
   };
 
-  const handleAction = async (id: string, status: "approved" | "rejected") => {
+  const handleReject = (id: string) => {
+    setRejectingLeaveId(id);
+    setRejectionReason("");
+    setShowRejectDialog(true);
+  };
+
+  const confirmReject = async () => {
+    if (!rejectingLeaveId) return;
+    await handleAction(rejectingLeaveId, "rejected", rejectionReason.trim() || null);
+    setShowRejectDialog(false);
+    setRejectingLeaveId(null);
+    setRejectionReason("");
+  };
+
+  const handleAction = async (id: string, status: "approved" | "rejected", reason?: string | null) => {
+    const updates: any = { status, approved_by: user!.id, approved_at: new Date().toISOString() };
+    if (status === "rejected" && reason) {
+      updates.rejection_reason = reason;
+    }
     const { error } = await supabase
       .from("leave_requests")
-      .update({ status, approved_by: user!.id, approved_at: new Date().toISOString() })
+      .update(updates)
       .eq("id", id);
 
     if (error) {
@@ -292,7 +313,7 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-on-time" onClick={() => handleAction(l.id, "approved")}>
                               <Check className="w-4 h-4" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-late" onClick={() => handleAction(l.id, "rejected")}>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-late" onClick={() => handleReject(l.id)}>
                               <X className="w-4 h-4" />
                             </Button>
                           </div>
@@ -308,6 +329,28 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
           </TableBody>
         </Table>
       </div>
+
+      {/* Rejection reason dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Leave Request</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>Reason for Rejection (optional)</Label>
+            <Textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter reason for rejection..."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmReject}>Reject Leave</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showApply} onOpenChange={setShowApply}>
         <DialogContent className="sm:max-w-md">

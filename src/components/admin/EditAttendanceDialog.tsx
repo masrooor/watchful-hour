@@ -28,13 +28,17 @@ interface EditAttendanceDialogProps {
 }
 
 const EditAttendanceDialog = ({ record, profileName, open, onOpenChange }: EditAttendanceDialogProps) => {
+  const formatTimeLocal = (isoStr: string | null) => {
+    if (!isoStr) return "";
+    const d = new Date(isoStr);
+    const h = d.getHours().toString().padStart(2, "0");
+    const m = d.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}`;
+  };
+
   const [status, setStatus] = useState(record.status);
-  const [clockIn, setClockIn] = useState(
-    record.clock_in ? new Date(record.clock_in).toTimeString().slice(0, 5) : ""
-  );
-  const [clockOut, setClockOut] = useState(
-    record.clock_out ? new Date(record.clock_out).toTimeString().slice(0, 5) : ""
-  );
+  const [clockIn, setClockIn] = useState(formatTimeLocal(record.clock_in));
+  const [clockOut, setClockOut] = useState(formatTimeLocal(record.clock_out));
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -42,13 +46,18 @@ const EditAttendanceDialog = ({ record, profileName, open, onOpenChange }: EditA
     const updates: any = { status };
 
     if (clockIn) {
-      updates.clock_in = `${record.date}T${clockIn}:00`;
+      // Build a proper local Date object and convert to ISO
+      const [h, m] = clockIn.split(":");
+      const d = new Date(`${record.date}T${h}:${m}:00`);
+      updates.clock_in = d.toISOString();
     } else {
       updates.clock_in = null;
     }
 
     if (clockOut) {
-      updates.clock_out = `${record.date}T${clockOut}:00`;
+      const [h, m] = clockOut.split(":");
+      const d = new Date(`${record.date}T${h}:${m}:00`);
+      updates.clock_out = d.toISOString();
     } else {
       updates.clock_out = null;
     }
