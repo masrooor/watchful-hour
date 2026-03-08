@@ -113,6 +113,15 @@ const Auth = () => {
           throw error;
         }
         attemptsRef.current = 0;
+
+        // Check if user has MFA enrolled
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const hasVerifiedTOTP = factors?.totp?.some((f) => f.status === "verified");
+        if (hasVerifiedTOTP) {
+          setShowMFA(true);
+          return;
+        }
+
         toast.success("Welcome back!");
         navigate("/");
       } else {
