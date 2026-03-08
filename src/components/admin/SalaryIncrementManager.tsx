@@ -26,8 +26,9 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [incrementMode, setIncrementMode] = useState<"fixed" | "percentage">("fixed");
   const [form, setForm] = useState({
-    new_salary: "",
+    value: "",
     effective_date: new Date().toISOString().split("T")[0],
     reason: "",
   });
