@@ -95,6 +95,21 @@ const EmployeeLeaveWidget = () => {
       toast.success("Leave request submitted");
       setShowApply(false);
       setForm({ leave_type: "casual", start_date: "", end_date: "", reason: "" });
+
+      // Notify admin/HR about the new leave request
+      const { data: newLeave } = await supabase
+        .from("leave_requests")
+        .select("id")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (newLeave) {
+        supabase.functions.invoke("notify-leave-request", {
+          body: { leaveId: newLeave.id },
+        }).catch(console.error);
+      }
     }
   };
 
