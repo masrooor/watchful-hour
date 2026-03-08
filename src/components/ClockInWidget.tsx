@@ -11,6 +11,7 @@ const ClockInWidget = () => {
   const [fetchingRecord, setFetchingRecord] = useState(true);
 
   const [todayRecords, setTodayRecords] = useState<any[]>([]);
+  const [processing, setProcessing] = useState(false);
 
   const fetchTodayRecords = async () => {
     if (!user) return;
@@ -64,18 +65,25 @@ const ClockInWidget = () => {
   };
 
   const handleClockIn = async () => {
+    setProcessing(true);
     try {
       const position = await getLocation();
       const { latitude, longitude } = position.coords;
       await clockIn(latitude, longitude, "Office");
     } catch {
-      // Try without location
       await clockIn(0, 0, "Unknown");
+    } finally {
+      setProcessing(false);
     }
   };
 
   const handleClockOut = async () => {
-    await clockOut();
+    setProcessing(true);
+    try {
+      await clockOut();
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (fetchingRecord) {
@@ -97,20 +105,20 @@ const ClockInWidget = () => {
         <div className="relative">
            <button
              onClick={isClockedIn ? handleClockOut : handleClockIn}
-             disabled={loading || allClockedOut}
-             className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm ${
-               loading || allClockedOut
-                 ? "opacity-70 cursor-not-allowed"
-                 : "hover:scale-105 active:scale-95"
-             } ${
-              isClockedIn
-                ? "bg-destructive text-destructive-foreground shadow-[0_0_30px_-5px_hsl(var(--destructive)/0.4)]"
-                : "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)]"
-            }`}
-          >
-            {loading ? (
-               <Loader2 className="w-8 h-8 animate-spin" />
-             ) : allClockedOut ? (
+              disabled={loading || processing || allClockedOut}
+              className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm ${
+                loading || processing || allClockedOut
+                  ? "opacity-70 cursor-not-allowed"
+                  : "hover:scale-105 active:scale-95"
+              } ${
+               isClockedIn
+                 ? "bg-destructive text-destructive-foreground shadow-[0_0_30px_-5px_hsl(var(--destructive)/0.4)]"
+                 : "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)]"
+             }`}
+           >
+             {(loading || processing) ? (
+                <Loader2 className="w-8 h-8 animate-spin" />
+              ) : allClockedOut ? (
                <div className="text-center">
                  <CheckCircle className="w-8 h-8 mx-auto mb-1" />
                  <span>Done for Today</span>
