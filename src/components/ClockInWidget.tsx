@@ -65,18 +65,25 @@ const ClockInWidget = () => {
   };
 
   const handleClockIn = async () => {
+    setProcessing(true);
     try {
       const position = await getLocation();
       const { latitude, longitude } = position.coords;
       await clockIn(latitude, longitude, "Office");
     } catch {
-      // Try without location
       await clockIn(0, 0, "Unknown");
+    } finally {
+      setProcessing(false);
     }
   };
 
   const handleClockOut = async () => {
-    await clockOut();
+    setProcessing(true);
+    try {
+      await clockOut();
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (fetchingRecord) {
