@@ -200,18 +200,41 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
                 {currentSalary > 0 ? `Rs ${currentSalary.toLocaleString()}` : "Not set"}
               </p>
             </div>
+            <div className="space-y-2.5">
+              <Label>Increment Type *</Label>
+              <RadioGroup value={incrementMode} onValueChange={(v) => { setIncrementMode(v as "fixed" | "percentage"); setForm(p => ({ ...p, value: "" })); }}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="fixed" id="fixed" />
+                  <Label htmlFor="fixed" className="font-normal cursor-pointer">Fixed Amount (Rs)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="percentage" id="percentage" />
+                  <Label htmlFor="percentage" className="font-normal cursor-pointer">Percentage (%)</Label>
+                </div>
+              </RadioGroup>
+            </div>
             <div className="space-y-1.5">
-              <Label>New Salary (Rs) *</Label>
+              <Label>{incrementMode === "fixed" ? "New Salary (Rs)" : "Increment Percentage (%)"} *</Label>
               <Input
                 type="number"
-                value={form.new_salary}
-                onChange={(e) => setForm((p) => ({ ...p, new_salary: e.target.value }))}
-                placeholder="Enter new salary"
+                step={incrementMode === "percentage" ? "0.01" : "1"}
+                value={form.value}
+                onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))}
+                placeholder={incrementMode === "fixed" ? "Enter new salary amount" : "Enter percentage (e.g., 10)"}
               />
-              {newSalaryNum > 0 && (
+              {form.value && parseFloat(form.value) > 0 && (
                 <p className={`text-xs font-medium ${previewAmount >= 0 ? "text-on-time" : "text-destructive"}`}>
-                  {previewAmount >= 0 ? "+" : ""}Rs {Math.abs(previewAmount).toLocaleString()}
-                  {currentSalary > 0 && ` (${previewPct >= 0 ? "+" : ""}${previewPct.toFixed(1)}%)`}
+                  {incrementMode === "fixed" ? (
+                    <>
+                      Increment: +Rs {previewAmount.toLocaleString()}
+                      {currentSalary > 0 && ` (${previewPct.toFixed(1)}%)`}
+                    </>
+                  ) : (
+                    <>
+                      New Salary: Rs {newSalaryNum.toLocaleString()}
+                      {` (+Rs ${previewAmount.toLocaleString()})`}
+                    </>
+                  )}
                 </p>
               )}
             </div>
