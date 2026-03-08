@@ -44,6 +44,7 @@ export type AdminSection =
   | "settings"
   | "employees"
   | "leaves"
+  | "leave-settings"
   | "announcements"
   | "documents"
   | "payroll"
@@ -53,7 +54,8 @@ export type AdminSection =
   | "audit-logs"
   | "role-management"
   | "change-password"
-  | "employee-detail";
+  | "employee-detail"
+  | "onboarding";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
