@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Megaphone, Trash2 } from "lucide-react";
+import { Plus, Megaphone, Trash2, Mail } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const priorityColors: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
@@ -40,6 +41,8 @@ const Announcements = ({ profileMap, isAdminOrHR }: AnnouncementsProps) => {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: "", content: "", priority: "normal" });
+  const [sendEmail, setSendEmail] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchAnnouncements = async () => {
     const { data } = await supabase
@@ -66,19 +69,44 @@ const Announcements = ({ profileMap, isAdminOrHR }: AnnouncementsProps) => {
       return;
     }
 
-    const { error } = await supabase.from("announcements").insert({
-      title: form.title.trim(),
-      content: form.content.trim(),
-      priority: form.priority,
-      author_id: user!.id,
-    });
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("announcements").insert({
+        title: form.title.trim(),
+        content: form.content.trim(),
+        priority: form.priority,
+        author_id: user!.id,
+      });
 
-    if (error) {
-      toast.error("Failed to create announcement");
-    } else {
-      toast.success("Announcement published");
+      if (error) {
+        toast.error("Failed to create announcement");
+        return;
+      }
+
+      if (sendEmail) {
+        const { error: fnError } = await supabase.functions.invoke("notify-announcement", {
+          body: {
+            title: form.title.trim(),
+            content: form.content.trim(),
+            priority: form.priority,
+            authorId: user!.id,
+          },
+        });
+        if (fnError) {
+          console.error("Email notification failed:", fnError);
+          toast.warning("Announcement published but email notification failed");
+        } else {
+          toast.success("Announcement published & emails sent");
+        }
+      } else {
+        toast.success("Announcement published");
+      }
+
       setShowCreate(false);
       setForm({ title: "", content: "", priority: "normal" });
+      setSendEmail(false);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -161,9 +189,18 @@ const Announcements = ({ profileMap, isAdminOrHR }: AnnouncementsProps) => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-center space-x-2 pt-1">
+              <Checkbox id="sendEmail" checked={sendEmail} onCheckedChange={(v) => setSendEmail(!!v)} />
+              <Label htmlFor="sendEmail" className="flex items-center gap-1.5 text-sm font-normal cursor-pointer">
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                Also send via email to all employees
+              </Label>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button type="submit">Publish</Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Publishing..." : "Publish"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
