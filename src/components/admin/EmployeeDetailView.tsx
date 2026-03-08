@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   ArrowLeft, User, CalendarDays, TreePalm, Wallet, FileText,
-  Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut, Timer, AlertTriangle,
+  Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut, Timer, AlertTriangle, Pencil, Save, X,
 } from "lucide-react";
 
 const DEFAULT_REQUIRED_DAILY_HOURS = 9;
@@ -47,7 +50,8 @@ const leaveStatusColors: Record<string, string> = {
   rejected: "bg-late/10 text-late",
 };
 
-const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
+const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailViewProps) => {
+  const [profile, setProfile] = useState(initialProfile);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<any>(null);
@@ -58,6 +62,9 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
   const [settings, setSettings] = useState<any>(null);
   const [holidays, setHolidays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editData, setEditData] = useState<any>({});
 
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
@@ -187,36 +194,129 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
           <TabsTrigger value="payroll"><FileText className="w-4 h-4 mr-1" />Payroll</TabsTrigger>
         </TabsList>
 
-        {/* Profile Tab */}
         <TabsContent value="profile">
           <Card>
-            <CardHeader><CardTitle className="text-base">Personal Information</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Personal Information</CardTitle>
+              {!editing ? (
+                <Button variant="outline" size="sm" onClick={() => { setEditing(true); setEditData({ ...profile }); }} className="gap-1">
+                  <Pencil className="w-3.5 h-3.5" /> Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="gap-1">
+                    <X className="w-3.5 h-3.5" /> Cancel
+                  </Button>
+                  <Button size="sm" disabled={saving} onClick={async () => {
+                    setSaving(true);
+                    const { error } = await supabase.from("profiles").update({
+                      name: editData.name,
+                      email: editData.email,
+                      phone: editData.phone,
+                      cnic: editData.cnic,
+                      date_of_birth: editData.date_of_birth || null,
+                      city: editData.city,
+                      address: editData.address,
+                      department: editData.department,
+                      designation: editData.designation,
+                      employment_type: editData.employment_type,
+                      job_status: editData.job_status,
+                      joining_date: editData.joining_date || null,
+                      shift_start: editData.shift_start || null,
+                      shift_end: editData.shift_end || null,
+                      salary: editData.salary ? Number(editData.salary) : null,
+                      emergency_contact_name: editData.emergency_contact_name,
+                      emergency_contact_phone: editData.emergency_contact_phone,
+                    }).eq("id", profile.id);
+                    setSaving(false);
+                    if (error) { toast.error("Failed to save", { description: error.message }); }
+                    else { setProfile({ ...profile, ...editData }); setEditing(false); toast.success("Profile updated"); }
+                  }} className="gap-1">
+                    <Save className="w-3.5 h-3.5" /> Save
+                  </Button>
+                </div>
+              )}
+            </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { label: "Full Name", value: profile.name },
-                  { label: "Email", value: profile.email },
-                  { label: "Phone", value: profile.phone },
-                  { label: "CNIC", value: profile.cnic },
-                  { label: "Date of Birth", value: profile.date_of_birth },
-                  { label: "City", value: profile.city },
-                  { label: "Address", value: profile.address },
-                  { label: "Department", value: profile.department },
-                  { label: "Designation", value: profile.designation },
-                  { label: "Employment Type", value: profile.employment_type },
-                  { label: "Job Status", value: profile.job_status },
-                  { label: "Joining Date", value: profile.joining_date },
-                  { label: "Shift", value: profile.shift_start && profile.shift_end ? `${profile.shift_start.slice(0, 5)} - ${profile.shift_end.slice(0, 5)}` : null },
-                  { label: "Salary", value: profile.salary ? `Rs ${Number(profile.salary).toLocaleString()}` : null },
-                  { label: "Emergency Contact", value: profile.emergency_contact_name },
-                  { label: "Emergency Phone", value: profile.emergency_contact_phone },
-                ].map((item) => (
-                  <div key={item.label} className="space-y-1">
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className="text-sm font-medium text-foreground">{item.value || "—"}</p>
+              {editing ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { label: "Full Name", key: "name", type: "text" },
+                    { label: "Email", key: "email", type: "email" },
+                    { label: "Phone", key: "phone", type: "text" },
+                    { label: "CNIC", key: "cnic", type: "text" },
+                    { label: "Date of Birth", key: "date_of_birth", type: "date" },
+                    { label: "City", key: "city", type: "text" },
+                    { label: "Address", key: "address", type: "text" },
+                    { label: "Department", key: "department", type: "text" },
+                    { label: "Designation", key: "designation", type: "text" },
+                    { label: "Joining Date", key: "joining_date", type: "date" },
+                    { label: "Shift Start", key: "shift_start", type: "time" },
+                    { label: "Shift End", key: "shift_end", type: "time" },
+                    { label: "Salary", key: "salary", type: "number" },
+                    { label: "Emergency Contact", key: "emergency_contact_name", type: "text" },
+                    { label: "Emergency Phone", key: "emergency_contact_phone", type: "text" },
+                  ].map((field) => (
+                    <div key={field.key} className="space-y-1.5">
+                      <Label className="text-xs">{field.label}</Label>
+                      <Input
+                        type={field.type}
+                        value={editData[field.key] || ""}
+                        onChange={(e) => setEditData({ ...editData, [field.key]: e.target.value })}
+                      />
+                    </div>
+                  ))}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Employment Type</Label>
+                    <Select value={editData.employment_type || "full-time"} onValueChange={(v) => setEditData({ ...editData, employment_type: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full-time">Full-time</SelectItem>
+                        <SelectItem value="part-time">Part-time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                        <SelectItem value="intern">Intern</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Job Status</Label>
+                    <Select value={editData.job_status || "probation"} onValueChange={(v) => setEditData({ ...editData, job_status: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="probation">Probation</SelectItem>
+                        <SelectItem value="permanent">Permanent</SelectItem>
+                        <SelectItem value="terminated">Terminated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { label: "Full Name", value: profile.name },
+                    { label: "Email", value: profile.email },
+                    { label: "Phone", value: profile.phone },
+                    { label: "CNIC", value: profile.cnic },
+                    { label: "Date of Birth", value: profile.date_of_birth },
+                    { label: "City", value: profile.city },
+                    { label: "Address", value: profile.address },
+                    { label: "Department", value: profile.department },
+                    { label: "Designation", value: profile.designation },
+                    { label: "Employment Type", value: profile.employment_type },
+                    { label: "Job Status", value: profile.job_status },
+                    { label: "Joining Date", value: profile.joining_date },
+                    { label: "Shift", value: profile.shift_start && profile.shift_end ? `${profile.shift_start.slice(0, 5)} - ${profile.shift_end.slice(0, 5)}` : null },
+                    { label: "Salary", value: profile.salary ? `Rs ${Number(profile.salary).toLocaleString()}` : null },
+                    { label: "Emergency Contact", value: profile.emergency_contact_name },
+                    { label: "Emergency Phone", value: profile.emergency_contact_phone },
+                  ].map((item) => (
+                    <div key={item.label} className="space-y-1">
+                      <p className="text-xs text-muted-foreground">{item.label}</p>
+                      <p className="text-sm font-medium text-foreground">{item.value || "—"}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
