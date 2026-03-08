@@ -12,6 +12,8 @@ export const useAttendance = () => {
     setLoading(true);
     try {
       const now = new Date();
+      const dayOfWeek = now.getDay(); // 0=Sunday, 6=Saturday
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       const cutoff = new Date();
       cutoff.setHours(10, 30, 0, 0);
       const status = now > cutoff ? 'late' : 'on-time';
