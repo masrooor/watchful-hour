@@ -93,6 +93,7 @@ const menuGroups = [
     icon: Users,
     items: [
       { id: "employees" as const, label: "Employee List", icon: Users },
+      { id: "onboarding" as const, label: "Onboarding", icon: ClipboardCheck },
       { id: "documents" as const, label: "Documents", icon: FileText },
     ],
   },
