@@ -256,6 +256,7 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
                     { label: "Shift Start", key: "shift_start", type: "time" },
                     { label: "Shift End", key: "shift_end", type: "time" },
                     { label: "Salary", key: "salary", type: "number" },
+                    { label: "Required Daily Hours", key: "required_daily_hours", type: "number" },
                     { label: "Emergency Contact", key: "emergency_contact_name", type: "text" },
                     { label: "Emergency Phone", key: "emergency_contact_phone", type: "text" },
                   ].map((field) => (
