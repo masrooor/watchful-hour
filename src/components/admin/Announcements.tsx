@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Megaphone, Trash2 } from "lucide-react";
+import { Plus, Megaphone, Trash2, Mail } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const priorityColors: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
