@@ -201,11 +201,14 @@ const AdminDashboard = () => {
       // Fetch probation period setting
       const { data: settingsData } = await supabase
         .from("attendance_settings")
-        .select("probation_period_days")
+        .select("probation_period_days, work_days")
         .limit(1)
         .single();
       if (settingsData?.probation_period_days) {
         setProbationPeriodDays(settingsData.probation_period_days);
+      }
+      if (settingsData?.work_days) {
+        setWorkDays(settingsData.work_days);
       }
 
       setLoading(false);
