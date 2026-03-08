@@ -9,6 +9,7 @@ import EmployeeLoanDetails from "@/components/EmployeeLoanDetails";
 import EmployeeLeaveWidget from "@/components/EmployeeLeaveWidget";
 import EmployeeProfileEditor from "@/components/EmployeeProfileEditor";
 import EmployeeAnnouncements from "@/components/EmployeeAnnouncements";
+import EmployeeAttendanceCalendar from "@/components/EmployeeAttendanceCalendar";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,6 +137,7 @@ const Index = () => {
         return (
           <div className="space-y-6">
             <ClockInWidget />
+            <EmployeeAttendanceCalendar />
             <LocationMap employees={employees} attendance={attendanceRecords} />
           </div>
         );
