@@ -69,19 +69,44 @@ const Announcements = ({ profileMap, isAdminOrHR }: AnnouncementsProps) => {
       return;
     }
 
-    const { error } = await supabase.from("announcements").insert({
-      title: form.title.trim(),
-      content: form.content.trim(),
-      priority: form.priority,
-      author_id: user!.id,
-    });
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("announcements").insert({
+        title: form.title.trim(),
+        content: form.content.trim(),
+        priority: form.priority,
+        author_id: user!.id,
+      });
 
-    if (error) {
-      toast.error("Failed to create announcement");
-    } else {
-      toast.success("Announcement published");
+      if (error) {
+        toast.error("Failed to create announcement");
+        return;
+      }
+
+      if (sendEmail) {
+        const { error: fnError } = await supabase.functions.invoke("notify-announcement", {
+          body: {
+            title: form.title.trim(),
+            content: form.content.trim(),
+            priority: form.priority,
+            authorId: user!.id,
+          },
+        });
+        if (fnError) {
+          console.error("Email notification failed:", fnError);
+          toast.warning("Announcement published but email notification failed");
+        } else {
+          toast.success("Announcement published & emails sent");
+        }
+      } else {
+        toast.success("Announcement published");
+      }
+
       setShowCreate(false);
       setForm({ title: "", content: "", priority: "normal" });
+      setSendEmail(false);
+    } finally {
+      setSubmitting(false);
     }
   };
 
