@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { TrendingUp, Plus, CalendarDays } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useCallback } from "react";
 
 interface SalaryIncrementManagerProps {
   profile: any;
