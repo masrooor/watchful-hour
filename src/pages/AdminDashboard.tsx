@@ -56,6 +56,8 @@ import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesD
 import RoleManagement from "@/components/admin/RoleManagement";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import EmployeeDetailView from "@/components/admin/EmployeeDetailView";
+import EmployeeOnboarding from "@/components/admin/EmployeeOnboarding";
+import LeaveSettings from "@/components/admin/LeaveSettings";
 import { logAudit } from "@/lib/auditLog";
 import NotificationBell from "@/components/NotificationBell";
 import ClockInWidget from "@/components/ClockInWidget";
@@ -74,6 +76,7 @@ const sectionTitles: Record<AdminSection, string> = {
   settings: "Attendance Settings",
   employees: "Employee List",
   leaves: "Leave Management",
+  "leave-settings": "Leave Settings",
   announcements: "Announcements",
   documents: "Employee Documents",
   payroll: "Salary & Payroll",
@@ -84,6 +87,7 @@ const sectionTitles: Record<AdminSection, string> = {
   "role-management": "Role Management",
   "change-password": "Change Password",
   "employee-detail": "Employee Details",
+  onboarding: "Employee Onboarding",
 };
 
 const AdminDashboard = () => {
@@ -609,6 +613,9 @@ const AdminDashboard = () => {
       case "leaves":
         return <LeaveManagement profiles={profiles} profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />;
 
+      case "leave-settings":
+        return <LeaveSettings profiles={profiles} />;
+
       case "announcements":
         return <Announcements profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />;
 
@@ -635,6 +642,9 @@ const AdminDashboard = () => {
 
       case "role-management":
         return <RoleManagement profiles={profiles} />;
+
+      case "onboarding":
+        return <EmployeeOnboarding profiles={profiles} />;
 
       case "change-password":
         return (

@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   UserCog,
   Lock,
+  ClipboardCheck,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +44,7 @@ export type AdminSection =
   | "settings"
   | "employees"
   | "leaves"
+  | "leave-settings"
   | "announcements"
   | "documents"
   | "payroll"
@@ -51,7 +54,8 @@ export type AdminSection =
   | "audit-logs"
   | "role-management"
   | "change-password"
-  | "employee-detail";
+  | "employee-detail"
+  | "onboarding";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -81,6 +85,7 @@ const menuGroups = [
     icon: TreePalm,
     items: [
       { id: "leaves" as const, label: "Leave Management", icon: TreePalm },
+      { id: "leave-settings" as const, label: "Leave Settings", icon: Settings2 },
     ],
   },
   {
@@ -88,6 +93,7 @@ const menuGroups = [
     icon: Users,
     items: [
       { id: "employees" as const, label: "Employee List", icon: Users },
+      { id: "onboarding" as const, label: "Onboarding", icon: ClipboardCheck },
       { id: "documents" as const, label: "Documents", icon: FileText },
     ],
   },
@@ -119,7 +125,7 @@ const menuGroups = [
   },
 ];
 
-const MANAGER_SECTIONS: AdminSection[] = ["dashboard", "attendance", "analytics", "employees", "leaves", "loans"];
+const MANAGER_SECTIONS: AdminSection[] = ["dashboard", "attendance", "analytics", "employees", "leaves", "loans", "onboarding"];
 const PAYROLL_SECTIONS: AdminSection[] = ["dashboard", "payroll", "allowances-deductions", "loans", "monthly-report"];
 
 const AdminSidebar = ({ activeSection, onSectionChange, userRole }: AdminSidebarProps) => {
