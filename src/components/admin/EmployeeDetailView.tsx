@@ -666,6 +666,15 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
                 </CardContent>
               </Card>
             )}
+
+            <SalaryIncrementManager
+              profile={profile}
+              onSalaryUpdated={() => {
+                supabase.from("profiles").select("*").eq("id", profile.id).single().then(({ data }) => {
+                  if (data) setProfile(data);
+                });
+              }}
+            />
           </div>
         </TabsContent>
       </Tabs>
