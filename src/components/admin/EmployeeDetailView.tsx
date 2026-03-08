@@ -17,6 +17,7 @@ import {
   Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut, Timer, AlertTriangle, Pencil, Save, X,
 } from "lucide-react";
 import AttendanceCalendar from "./AttendanceCalendar";
+import SalaryIncrementManager from "./SalaryIncrementManager";
 
 const DEFAULT_REQUIRED_DAILY_HOURS = 9;
 
@@ -665,6 +666,15 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
                 </CardContent>
               </Card>
             )}
+
+            <SalaryIncrementManager
+              profile={profile}
+              onSalaryUpdated={() => {
+                supabase.from("profiles").select("*").eq("id", profile.id).single().then(({ data }) => {
+                  if (data) setProfile(data);
+                });
+              }}
+            />
           </div>
         </TabsContent>
       </Tabs>
