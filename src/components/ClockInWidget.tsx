@@ -109,18 +109,23 @@ const ClockInWidget = () => {
             }`}
           >
             {loading ? (
-              <Loader2 className="w-8 h-8 animate-spin" />
-            ) : isClockedIn ? (
-              <div className="text-center">
-                <LogOut className="w-8 h-8 mx-auto mb-1" />
-                <span>Clock Out</span>
-              </div>
-            ) : (
-              <div className="text-center">
-                <span className="text-2xl font-bold block">IN</span>
-                <span className="text-xs opacity-80">Tap to Clock In</span>
-              </div>
-            )}
+               <Loader2 className="w-8 h-8 animate-spin" />
+             ) : allClockedOut ? (
+               <div className="text-center">
+                 <CheckCircle className="w-8 h-8 mx-auto mb-1" />
+                 <span>Done for Today</span>
+               </div>
+             ) : isClockedIn ? (
+               <div className="text-center">
+                 <LogOut className="w-8 h-8 mx-auto mb-1" />
+                 <span>Clock Out</span>
+               </div>
+             ) : (
+               <div className="text-center">
+                 <span className="text-2xl font-bold block">IN</span>
+                 <span className="text-xs opacity-80">Tap to Clock In</span>
+               </div>
+             )}
           </button>
         </div>
 
