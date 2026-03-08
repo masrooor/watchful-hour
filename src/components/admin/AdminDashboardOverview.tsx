@@ -23,6 +23,7 @@ interface AdminDashboardOverviewProps {
   pendingLeaves: number;
   pendingLoans: number;
   probationPeriodDays: number;
+  workDays: number[];
   isAdmin: boolean;
   onNavigate: (section: string) => void;
   onAddEmployee: () => void;
@@ -35,18 +36,21 @@ const AdminDashboardOverview = ({
   pendingLeaves,
   pendingLoans,
   probationPeriodDays,
+  workDays,
   isAdmin,
   onNavigate,
   onAddEmployee,
 }: AdminDashboardOverviewProps) => {
   const todayStats = useMemo(() => {
     const total = profiles.length;
+    const today = new Date();
+    const isWorkDay = workDays.includes(today.getDay());
     const present = attendance.filter((a) => a.clock_in).length;
     const late = attendance.filter((a) => a.status === "late").length;
     const onTime = attendance.filter((a) => a.status === "on-time").length;
-    const absent = total - present;
-    return { total, present, late, onTime, absent };
-  }, [attendance, profiles]);
+    const absent = isWorkDay ? total - present : 0;
+    return { total, present, late, onTime, absent, isWorkDay };
+  }, [attendance, profiles, workDays]);
 
   // Upcoming birthdays (next 30 days)
   const upcomingBirthdays = useMemo(() => {

@@ -373,6 +373,7 @@ const AdminDashboard = () => {
               pendingLeaves={pendingLeaves}
               pendingLoans={pendingLoans}
               probationPeriodDays={probationPeriodDays}
+              workDays={workDays}
               isAdmin={isAdmin ?? false}
               onNavigate={(section) => setActiveSection(section as AdminSection)}
               onAddEmployee={() => setShowAddEmployee(true)}
