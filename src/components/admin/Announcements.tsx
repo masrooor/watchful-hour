@@ -189,9 +189,18 @@ const Announcements = ({ profileMap, isAdminOrHR }: AnnouncementsProps) => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-center space-x-2 pt-1">
+              <Checkbox id="sendEmail" checked={sendEmail} onCheckedChange={(v) => setSendEmail(!!v)} />
+              <Label htmlFor="sendEmail" className="flex items-center gap-1.5 text-sm font-normal cursor-pointer">
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                Also send via email to all employees
+              </Label>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button type="submit">Publish</Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Publishing..." : "Publish"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
