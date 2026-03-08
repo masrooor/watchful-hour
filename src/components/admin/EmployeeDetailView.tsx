@@ -50,7 +50,8 @@ const leaveStatusColors: Record<string, string> = {
   rejected: "bg-late/10 text-late",
 };
 
-const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
+const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailViewProps) => {
+  const [profile, setProfile] = useState(initialProfile);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<any>(null);
@@ -61,6 +62,9 @@ const EmployeeDetailView = ({ profile, onBack }: EmployeeDetailViewProps) => {
   const [settings, setSettings] = useState<any>(null);
   const [holidays, setHolidays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editData, setEditData] = useState<any>({});
 
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
