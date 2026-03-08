@@ -115,6 +115,7 @@ const AdminDashboard = () => {
   const [pendingLeaves, setPendingLeaves] = useState(0);
   const [pendingLoans, setPendingLoans] = useState(0);
   const [probationPeriodDays, setProbationPeriodDays] = useState(90);
+  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5, 6]);
 
   const handlePasswordChange = async () => {
     if (pwForm.newPassword.length < 6) {
