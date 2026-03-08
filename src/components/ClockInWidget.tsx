@@ -67,11 +67,18 @@ const ClockInWidget = () => {
   const handleClockIn = async () => {
     setProcessing(true);
     try {
-      const position = await getLocation();
-      const { latitude, longitude } = position.coords;
-      await clockIn(latitude, longitude, "Office");
-    } catch {
-      await clockIn(0, 0, "Unknown");
+      let lat = 0, lng = 0;
+      try {
+        const position = await getLocation();
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+      } catch {}
+      const result = await clockIn(lat, lng, "Office");
+      if (result) {
+        // Optimistically update state so button switches immediately
+        setTodayRecords(prev => [...prev, result]);
+        setTodayRecord(result);
+      }
     } finally {
       setProcessing(false);
     }
@@ -80,7 +87,12 @@ const ClockInWidget = () => {
   const handleClockOut = async () => {
     setProcessing(true);
     try {
-      await clockOut();
+      const result = await clockOut();
+      if (result) {
+        // Optimistically update the last record
+        setTodayRecords(prev => prev.map(r => r.id === result.id ? result : r));
+        setTodayRecord(result);
+      }
     } finally {
       setProcessing(false);
     }
