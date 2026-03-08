@@ -115,6 +115,7 @@ const AdminDashboard = () => {
   const [pendingLeaves, setPendingLeaves] = useState(0);
   const [pendingLoans, setPendingLoans] = useState(0);
   const [probationPeriodDays, setProbationPeriodDays] = useState(90);
+  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5, 6]);
 
   const handlePasswordChange = async () => {
     if (pwForm.newPassword.length < 6) {
@@ -200,11 +201,14 @@ const AdminDashboard = () => {
       // Fetch probation period setting
       const { data: settingsData } = await supabase
         .from("attendance_settings")
-        .select("probation_period_days")
+        .select("probation_period_days, work_days")
         .limit(1)
         .single();
       if (settingsData?.probation_period_days) {
         setProbationPeriodDays(settingsData.probation_period_days);
+      }
+      if (settingsData?.work_days) {
+        setWorkDays(settingsData.work_days);
       }
 
       setLoading(false);
@@ -369,6 +373,7 @@ const AdminDashboard = () => {
               pendingLeaves={pendingLeaves}
               pendingLoans={pendingLoans}
               probationPeriodDays={probationPeriodDays}
+              workDays={workDays}
               isAdmin={isAdmin ?? false}
               onNavigate={(section) => setActiveSection(section as AdminSection)}
               onAddEmployee={() => setShowAddEmployee(true)}
