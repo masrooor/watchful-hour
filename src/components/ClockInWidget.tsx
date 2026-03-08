@@ -95,32 +95,37 @@ const ClockInWidget = () => {
       <h2 className="text-lg font-semibold text-foreground mb-4">Quick Clock In</h2>
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
-          <button
-            onClick={isClockedIn ? handleClockOut : handleClockIn}
-            disabled={loading}
-            className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm ${
-              loading
-                ? "opacity-70 cursor-not-allowed"
-                : "hover:scale-105 active:scale-95"
-            } ${
+           <button
+             onClick={isClockedIn ? handleClockOut : handleClockIn}
+             disabled={loading || allClockedOut}
+             className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm ${
+               loading || allClockedOut
+                 ? "opacity-70 cursor-not-allowed"
+                 : "hover:scale-105 active:scale-95"
+             } ${
               isClockedIn
                 ? "bg-destructive text-destructive-foreground shadow-[0_0_30px_-5px_hsl(var(--destructive)/0.4)]"
                 : "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)]"
             }`}
           >
             {loading ? (
-              <Loader2 className="w-8 h-8 animate-spin" />
-            ) : isClockedIn ? (
-              <div className="text-center">
-                <LogOut className="w-8 h-8 mx-auto mb-1" />
-                <span>Clock Out</span>
-              </div>
-            ) : (
-              <div className="text-center">
-                <span className="text-2xl font-bold block">IN</span>
-                <span className="text-xs opacity-80">Tap to Clock In</span>
-              </div>
-            )}
+               <Loader2 className="w-8 h-8 animate-spin" />
+             ) : allClockedOut ? (
+               <div className="text-center">
+                 <CheckCircle className="w-8 h-8 mx-auto mb-1" />
+                 <span>Done for Today</span>
+               </div>
+             ) : isClockedIn ? (
+               <div className="text-center">
+                 <LogOut className="w-8 h-8 mx-auto mb-1" />
+                 <span>Clock Out</span>
+               </div>
+             ) : (
+               <div className="text-center">
+                 <span className="text-2xl font-bold block">IN</span>
+                 <span className="text-xs opacity-80">Tap to Clock In</span>
+               </div>
+             )}
           </button>
         </div>
 
