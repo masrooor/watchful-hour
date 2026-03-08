@@ -41,6 +41,8 @@ const Announcements = ({ profileMap, isAdminOrHR }: AnnouncementsProps) => {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: "", content: "", priority: "normal" });
+  const [sendEmail, setSendEmail] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchAnnouncements = async () => {
     const { data } = await supabase
