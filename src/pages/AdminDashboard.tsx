@@ -76,6 +76,7 @@ const sectionTitles: Record<AdminSection, string> = {
   settings: "Attendance Settings",
   employees: "Employee List",
   leaves: "Leave Management",
+  "leave-settings": "Leave Settings",
   announcements: "Announcements",
   documents: "Employee Documents",
   payroll: "Salary & Payroll",
@@ -86,6 +87,7 @@ const sectionTitles: Record<AdminSection, string> = {
   "role-management": "Role Management",
   "change-password": "Change Password",
   "employee-detail": "Employee Details",
+  onboarding: "Employee Onboarding",
 };
 
 const AdminDashboard = () => {
