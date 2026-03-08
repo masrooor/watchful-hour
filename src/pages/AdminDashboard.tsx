@@ -643,6 +643,9 @@ const AdminDashboard = () => {
       case "role-management":
         return <RoleManagement profiles={profiles} />;
 
+      case "onboarding":
+        return <EmployeeOnboarding profiles={profiles} />;
+
       case "change-password":
         return (
           <div className="max-w-md space-y-4">
