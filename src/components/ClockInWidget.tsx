@@ -95,14 +95,14 @@ const ClockInWidget = () => {
       <h2 className="text-lg font-semibold text-foreground mb-4">Quick Clock In</h2>
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
-          <button
-            onClick={isClockedIn ? handleClockOut : handleClockIn}
-            disabled={loading}
-            className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm ${
-              loading
-                ? "opacity-70 cursor-not-allowed"
-                : "hover:scale-105 active:scale-95"
-            } ${
+           <button
+             onClick={isClockedIn ? handleClockOut : handleClockIn}
+             disabled={loading || allClockedOut}
+             className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm ${
+               loading || allClockedOut
+                 ? "opacity-70 cursor-not-allowed"
+                 : "hover:scale-105 active:scale-95"
+             } ${
               isClockedIn
                 ? "bg-destructive text-destructive-foreground shadow-[0_0_30px_-5px_hsl(var(--destructive)/0.4)]"
                 : "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)]"
