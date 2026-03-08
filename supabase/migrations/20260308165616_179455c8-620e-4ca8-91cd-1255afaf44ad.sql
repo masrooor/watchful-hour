@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN required_daily_hours numeric DEFAULT NULL;

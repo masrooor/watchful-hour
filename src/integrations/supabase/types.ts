@@ -469,6 +469,7 @@ export type Database = {
           joining_date: string | null
           name: string
           phone: string | null
+          required_daily_hours: number | null
           salary: number | null
           shift_end: string | null
           shift_start: string | null
@@ -494,6 +495,7 @@ export type Database = {
           joining_date?: string | null
           name?: string
           phone?: string | null
+          required_daily_hours?: number | null
           salary?: number | null
           shift_end?: string | null
           shift_start?: string | null
@@ -519,6 +521,7 @@ export type Database = {
           joining_date?: string | null
           name?: string
           phone?: string | null
+          required_daily_hours?: number | null
           salary?: number | null
           shift_end?: string | null
           shift_start?: string | null

@@ -111,7 +111,7 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
   }, [profile.user_id, selectedMonth, selectedYear]);
 
   const workDays = settings?.work_days || [1, 2, 3, 4, 5, 6];
-  const requiredDailyHours = Number(settings?.required_daily_hours) || DEFAULT_REQUIRED_DAILY_HOURS;
+  const requiredDailyHours = Number(profile.required_daily_hours) || Number(settings?.required_daily_hours) || DEFAULT_REQUIRED_DAILY_HOURS;
   const holidayDates = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
   const monthlyHoursSummary = useMemo(() => {
@@ -227,6 +227,7 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
                       shift_start: editData.shift_start || null,
                       shift_end: editData.shift_end || null,
                       salary: editData.salary ? Number(editData.salary) : null,
+                      required_daily_hours: editData.required_daily_hours ? Number(editData.required_daily_hours) : null,
                       emergency_contact_name: editData.emergency_contact_name,
                       emergency_contact_phone: editData.emergency_contact_phone,
                     }).eq("id", profile.id);
@@ -256,6 +257,7 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
                     { label: "Shift Start", key: "shift_start", type: "time" },
                     { label: "Shift End", key: "shift_end", type: "time" },
                     { label: "Salary", key: "salary", type: "number" },
+                    { label: "Required Daily Hours", key: "required_daily_hours", type: "number" },
                     { label: "Emergency Contact", key: "emergency_contact_name", type: "text" },
                     { label: "Emergency Phone", key: "emergency_contact_phone", type: "text" },
                   ].map((field) => (
