@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { TrendingUp, Plus, CalendarDays } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useCallback } from "react";
 
 interface SalaryIncrementManagerProps {
   profile: any;
@@ -26,8 +28,9 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [incrementMode, setIncrementMode] = useState<"fixed" | "percentage">("fixed");
   const [form, setForm] = useState({
-    new_salary: "",
+    value: "",
     effective_date: new Date().toISOString().split("T")[0],
     reason: "",
   });
@@ -49,13 +52,20 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
   }, [profile.user_id]);
 
   const handleSubmit = async () => {
-    const newSalary = parseFloat(form.new_salary);
-    if (!newSalary || newSalary <= 0) {
-      toast.error("Please enter a valid new salary");
+    const inputValue = parseFloat(form.value);
+    if (!inputValue || inputValue <= 0) {
+      toast.error(`Please enter a valid ${incrementMode === "fixed" ? "new salary" : "percentage"}`);
       return;
     }
     if (!form.effective_date) {
       toast.error("Please select an effective date");
+      return;
+    }
+
+    const newSalary = incrementMode === "fixed" ? inputValue : currentSalary + (currentSalary * inputValue / 100);
+    
+    if (newSalary <= currentSalary && incrementMode === "fixed") {
+      toast.error("New salary must be greater than current salary");
       return;
     }
 
@@ -103,13 +113,13 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
       onSalaryUpdated();
     }
 
-    setForm({ new_salary: "", effective_date: new Date().toISOString().split("T")[0], reason: "" });
+    setForm({ value: "", effective_date: new Date().toISOString().split("T")[0], reason: "" });
     setOpen(false);
     setSaving(false);
     fetchIncrements();
   };
 
-  const newSalaryNum = parseFloat(form.new_salary) || 0;
+  const newSalaryNum = incrementMode === "fixed" ? parseFloat(form.value) || 0 : currentSalary + (currentSalary * (parseFloat(form.value) || 0) / 100);
   const previewAmount = newSalaryNum - currentSalary;
   const previewPct = currentSalary > 0 ? ((previewAmount / currentSalary) * 100) : 0;
 
@@ -190,18 +200,41 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
                 {currentSalary > 0 ? `Rs ${currentSalary.toLocaleString()}` : "Not set"}
               </p>
             </div>
+            <div className="space-y-2.5">
+              <Label>Increment Type *</Label>
+              <RadioGroup value={incrementMode} onValueChange={(v) => { setIncrementMode(v as "fixed" | "percentage"); setForm(p => ({ ...p, value: "" })); }}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="fixed" id="fixed" />
+                  <Label htmlFor="fixed" className="font-normal cursor-pointer">Fixed Amount (Rs)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="percentage" id="percentage" />
+                  <Label htmlFor="percentage" className="font-normal cursor-pointer">Percentage (%)</Label>
+                </div>
+              </RadioGroup>
+            </div>
             <div className="space-y-1.5">
-              <Label>New Salary (Rs) *</Label>
+              <Label>{incrementMode === "fixed" ? "New Salary (Rs)" : "Increment Percentage (%)"} *</Label>
               <Input
                 type="number"
-                value={form.new_salary}
-                onChange={(e) => setForm((p) => ({ ...p, new_salary: e.target.value }))}
-                placeholder="Enter new salary"
+                step={incrementMode === "percentage" ? "0.01" : "1"}
+                value={form.value}
+                onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))}
+                placeholder={incrementMode === "fixed" ? "Enter new salary amount" : "Enter percentage (e.g., 10)"}
               />
-              {newSalaryNum > 0 && (
+              {form.value && parseFloat(form.value) > 0 && (
                 <p className={`text-xs font-medium ${previewAmount >= 0 ? "text-on-time" : "text-destructive"}`}>
-                  {previewAmount >= 0 ? "+" : ""}Rs {Math.abs(previewAmount).toLocaleString()}
-                  {currentSalary > 0 && ` (${previewPct >= 0 ? "+" : ""}${previewPct.toFixed(1)}%)`}
+                  {incrementMode === "fixed" ? (
+                    <>
+                      Increment: +Rs {previewAmount.toLocaleString()}
+                      {currentSalary > 0 && ` (${previewPct.toFixed(1)}%)`}
+                    </>
+                  ) : (
+                    <>
+                      New Salary: Rs {newSalaryNum.toLocaleString()}
+                      {` (+Rs ${previewAmount.toLocaleString()})`}
+                    </>
+                  )}
                 </p>
               )}
             </div>
