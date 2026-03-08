@@ -613,6 +613,9 @@ const AdminDashboard = () => {
       case "leaves":
         return <LeaveManagement profiles={profiles} profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />;
 
+      case "leave-settings":
+        return <LeaveSettings profiles={profiles} />;
+
       case "announcements":
         return <Announcements profileMap={profileMap} isAdminOrHR={isAdmin || isHR} />;
 
