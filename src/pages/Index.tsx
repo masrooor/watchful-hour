@@ -137,6 +137,7 @@ const Index = () => {
         return (
           <div className="space-y-6">
             <ClockInWidget />
+            <EmployeeAttendanceCalendar />
             <LocationMap employees={employees} attendance={attendanceRecords} />
           </div>
         );
