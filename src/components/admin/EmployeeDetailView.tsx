@@ -227,6 +227,7 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
                       shift_start: editData.shift_start || null,
                       shift_end: editData.shift_end || null,
                       salary: editData.salary ? Number(editData.salary) : null,
+                      required_daily_hours: editData.required_daily_hours ? Number(editData.required_daily_hours) : null,
                       emergency_contact_name: editData.emergency_contact_name,
                       emergency_contact_phone: editData.emergency_contact_phone,
                     }).eq("id", profile.id);
