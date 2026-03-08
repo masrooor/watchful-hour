@@ -54,6 +54,7 @@ import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
 import AuditLogViewer from "@/components/admin/AuditLogViewer";
 import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesDeductions";
 import RoleManagement from "@/components/admin/RoleManagement";
+import MFASetup from "@/components/admin/MFASetup";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import EmployeeDetailView from "@/components/admin/EmployeeDetailView";
 import EmployeeOnboarding from "@/components/admin/EmployeeOnboarding";
