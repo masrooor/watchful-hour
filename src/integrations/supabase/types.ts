@@ -527,6 +527,45 @@ export type Database = {
         }
         Relationships: []
       }
+      salary_increments: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          effective_date: string
+          id: string
+          increment_amount: number
+          increment_percentage: number | null
+          new_salary: number
+          previous_salary: number
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          effective_date?: string
+          id?: string
+          increment_amount?: number
+          increment_percentage?: number | null
+          new_salary?: number
+          previous_salary?: number
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          effective_date?: string
+          id?: string
+          increment_amount?: number
+          increment_percentage?: number | null
+          new_salary?: number
+          previous_salary?: number
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tax_slabs: {
         Row: {
           created_at: string
