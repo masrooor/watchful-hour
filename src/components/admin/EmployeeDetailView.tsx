@@ -16,6 +16,7 @@ import {
   ArrowLeft, User, CalendarDays, TreePalm, Wallet, FileText,
   Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut, Timer, AlertTriangle, Pencil, Save, X,
 } from "lucide-react";
+import AttendanceCalendar from "./AttendanceCalendar";
 
 const DEFAULT_REQUIRED_DAILY_HOURS = 9;
 
@@ -398,6 +399,16 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
                 </div>
               </CardContent>
             </Card>
+
+            {/* Attendance Calendar */}
+            <AttendanceCalendar
+              month={selectedMonth}
+              year={selectedYear}
+              attendance={monthlyAttendance}
+              holidays={holidayDates}
+              workDays={workDays}
+              leaveRequests={leaveRequests}
+            />
 
             {/* Daily Attendance with Hours */}
             <Card>
