@@ -50,13 +50,20 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
   }, [profile.user_id]);
 
   const handleSubmit = async () => {
-    const newSalary = parseFloat(form.new_salary);
-    if (!newSalary || newSalary <= 0) {
-      toast.error("Please enter a valid new salary");
+    const inputValue = parseFloat(form.value);
+    if (!inputValue || inputValue <= 0) {
+      toast.error(`Please enter a valid ${incrementMode === "fixed" ? "new salary" : "percentage"}`);
       return;
     }
     if (!form.effective_date) {
       toast.error("Please select an effective date");
+      return;
+    }
+
+    const newSalary = incrementMode === "fixed" ? inputValue : currentSalary + (currentSalary * inputValue / 100);
+    
+    if (newSalary <= currentSalary && incrementMode === "fixed") {
+      toast.error("New salary must be greater than current salary");
       return;
     }
 
@@ -104,7 +111,7 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
       onSalaryUpdated();
     }
 
-    setForm({ new_salary: "", effective_date: new Date().toISOString().split("T")[0], reason: "" });
+    setForm({ value: "", effective_date: new Date().toISOString().split("T")[0], reason: "" });
     setOpen(false);
     setSaving(false);
     fetchIncrements();
