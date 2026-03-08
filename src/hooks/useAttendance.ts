@@ -109,15 +109,25 @@ export const useAttendance = () => {
       const today = now.toISOString().split('T')[0];
       const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
-      // Find the latest open record (clocked in but not out) for today
-      const { data, error } = await supabase
+      // Find the latest open record first
+      const { data: latestOpen, error: findError } = await supabase
         .from('attendance_records')
-        .update({ clock_out: now.toISOString() })
+        .select('id')
         .eq('user_id', user.id)
         .eq('date', today)
         .is('clock_out', null)
         .order('clock_in', { ascending: false })
         .limit(1)
+        .maybeSingle();
+
+      if (findError) throw findError;
+      if (!latestOpen) throw new Error("No open clock-in record found for today");
+
+      // Update only that specific record
+      const { data, error } = await supabase
+        .from('attendance_records')
+        .update({ clock_out: now.toISOString() })
+        .eq('id', latestOpen.id)
         .select()
         .single();
 
