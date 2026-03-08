@@ -125,7 +125,7 @@ const menuGroups = [
   },
 ];
 
-const MANAGER_SECTIONS: AdminSection[] = ["dashboard", "attendance", "analytics", "employees", "leaves", "loans"];
+const MANAGER_SECTIONS: AdminSection[] = ["dashboard", "attendance", "analytics", "employees", "leaves", "loans", "onboarding"];
 const PAYROLL_SECTIONS: AdminSection[] = ["dashboard", "payroll", "allowances-deductions", "loans", "monthly-report"];
 
 const AdminSidebar = ({ activeSection, onSectionChange, userRole }: AdminSidebarProps) => {
