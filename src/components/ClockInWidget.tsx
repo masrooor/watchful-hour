@@ -11,6 +11,7 @@ const ClockInWidget = () => {
   const [fetchingRecord, setFetchingRecord] = useState(true);
 
   const [todayRecords, setTodayRecords] = useState<any[]>([]);
+  const [processing, setProcessing] = useState(false);
 
   const fetchTodayRecords = async () => {
     if (!user) return;
