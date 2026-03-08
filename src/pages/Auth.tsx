@@ -40,6 +40,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showMFA, setShowMFA] = useState(false);
   const navigate = useNavigate();
 
   // Rate limiting state
