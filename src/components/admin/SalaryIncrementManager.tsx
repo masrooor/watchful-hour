@@ -117,7 +117,7 @@ const SalaryIncrementManager = ({ profile, onSalaryUpdated }: SalaryIncrementMan
     fetchIncrements();
   };
 
-  const newSalaryNum = parseFloat(form.new_salary) || 0;
+  const newSalaryNum = incrementMode === "fixed" ? parseFloat(form.value) || 0 : currentSalary + (currentSalary * (parseFloat(form.value) || 0) / 100);
   const previewAmount = newSalaryNum - currentSalary;
   const previewPct = currentSalary > 0 ? ((previewAmount / currentSalary) * 100) : 0;
 
