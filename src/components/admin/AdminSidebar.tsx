@@ -85,6 +85,7 @@ const menuGroups = [
     icon: TreePalm,
     items: [
       { id: "leaves" as const, label: "Leave Management", icon: TreePalm },
+      { id: "leave-settings" as const, label: "Leave Settings", icon: Settings2 },
     ],
   },
   {
