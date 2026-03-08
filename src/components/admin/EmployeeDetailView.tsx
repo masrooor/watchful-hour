@@ -16,6 +16,7 @@ import {
   ArrowLeft, User, CalendarDays, TreePalm, Wallet, FileText,
   Phone, Mail, MapPin, Briefcase, Clock, LogIn, LogOut, Timer, AlertTriangle, Pencil, Save, X,
 } from "lucide-react";
+import AttendanceCalendar from "./AttendanceCalendar";
 
 const DEFAULT_REQUIRED_DAILY_HOURS = 9;
 
