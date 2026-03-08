@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import MFAVerification from "@/components/MFAVerification";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showMFA, setShowMFA] = useState(false);
   const navigate = useNavigate();
 
   // Rate limiting state
@@ -111,6 +113,15 @@ const Auth = () => {
           throw error;
         }
         attemptsRef.current = 0;
+
+        // Check if user has MFA enrolled
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const hasVerifiedTOTP = factors?.totp?.some((f) => f.status === "verified");
+        if (hasVerifiedTOTP) {
+          setShowMFA(true);
+          return;
+        }
+
         toast.success("Welcome back!");
         navigate("/");
       } else {
@@ -139,6 +150,17 @@ const Auth = () => {
       return next;
     });
   };
+
+  if (showMFA) {
+    return (
+      <MFAVerification
+        onVerified={() => {
+          toast.success("Welcome back!");
+          navigate("/");
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

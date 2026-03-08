@@ -54,6 +54,7 @@ import AddAttendanceDialog from "@/components/admin/AddAttendanceDialog";
 import AuditLogViewer from "@/components/admin/AuditLogViewer";
 import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesDeductions";
 import RoleManagement from "@/components/admin/RoleManagement";
+import MFASetup from "@/components/admin/MFASetup";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import EmployeeDetailView from "@/components/admin/EmployeeDetailView";
 import EmployeeOnboarding from "@/components/admin/EmployeeOnboarding";
@@ -648,31 +649,41 @@ const AdminDashboard = () => {
 
       case "change-password":
         return (
-          <div className="max-w-md space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="admin-new-pw">New Password</Label>
-              <Input
-                id="admin-new-pw"
-                type="password"
-                value={pwForm.newPassword}
-                onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
-                placeholder="Min 6 characters"
-              />
+          <div className="max-w-md space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Change Password</h3>
+              <div className="space-y-2">
+                <Label htmlFor="admin-new-pw">New Password</Label>
+                <Input
+                  id="admin-new-pw"
+                  type="password"
+                  value={pwForm.newPassword}
+                  onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+                  placeholder="Min 6 characters"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admin-confirm-pw">Confirm Password</Label>
+                <Input
+                  id="admin-confirm-pw"
+                  type="password"
+                  value={pwForm.confirmPassword}
+                  onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                  placeholder="Re-enter password"
+                />
+              </div>
+              <Button onClick={handlePasswordChange} disabled={pwSaving}>
+                {pwSaving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+                Update Password
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="admin-confirm-pw">Confirm Password</Label>
-              <Input
-                id="admin-confirm-pw"
-                type="password"
-                value={pwForm.confirmPassword}
-                onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                placeholder="Re-enter password"
-              />
+            <div className="border-t border-border pt-6 space-y-2">
+              <h3 className="text-lg font-semibold">Two-Factor Authentication</h3>
+              <p className="text-sm text-muted-foreground">
+                Add an extra layer of security to your account with TOTP-based 2FA.
+              </p>
+              <MFASetup />
             </div>
-            <Button onClick={handlePasswordChange} disabled={pwSaving}>
-              {pwSaving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
-              Update Password
-            </Button>
           </div>
         );
 
