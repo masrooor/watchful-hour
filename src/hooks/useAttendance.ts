@@ -35,14 +35,37 @@ export const useAttendance = () => {
 
       if (error) throw error;
 
-      if (status === 'late') {
-        // Get user profile for name
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name, department')
-          .eq('user_id', user.id)
-          .single();
+      // Get user profile for notifications
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, department')
+        .eq('user_id', user.id)
+        .single();
 
+      // Weekend clock-in notification
+      if (isWeekend) {
+        const dayName = dayOfWeek === 0 ? 'Sunday' : 'Saturday';
+        try {
+          await supabase.functions.invoke('notify-weekend-clockin', {
+            body: {
+              employeeName: profile?.name || user.email,
+              clockInTime: timeStr,
+              department: profile?.department || 'Unknown',
+              dayName,
+              userId: user.id,
+            },
+          });
+        } catch (notifError) {
+          console.error('Failed to send weekend notification:', notifError);
+        }
+
+        toast.warning("Weekend Clock-in!", {
+          description: `You clocked in on ${dayName} at ${timeStr}. Admin and managers have been notified.`,
+          duration: 6000,
+        });
+      }
+
+      if (status === 'late') {
         // Send late notification
         try {
           await supabase.functions.invoke('notify-late-arrival', {
@@ -50,17 +73,20 @@ export const useAttendance = () => {
               employeeName: profile?.name || user.email,
               clockInTime: timeStr,
               department: profile?.department || 'Unknown',
+              userId: user.id,
             },
           });
         } catch (notifError) {
           console.error('Failed to send late notification:', notifError);
         }
 
-        toast.error("Late Check-in!", {
-          description: `You clocked in at ${timeStr}. The deadline was 9:00 AM. Your manager has been notified.`,
-          duration: 6000,
-        });
-      } else {
+        if (!isWeekend) {
+          toast.error("Late Check-in!", {
+            description: `You clocked in at ${timeStr}. The deadline was 9:00 AM. Your manager has been notified.`,
+            duration: 6000,
+          });
+        }
+      } else if (!isWeekend) {
         toast.success("Clocked In!", {
           description: `Checked in at ${timeStr}. You're on time!`,
         });
