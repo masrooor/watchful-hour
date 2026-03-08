@@ -111,7 +111,7 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
   }, [profile.user_id, selectedMonth, selectedYear]);
 
   const workDays = settings?.work_days || [1, 2, 3, 4, 5, 6];
-  const requiredDailyHours = Number(settings?.required_daily_hours) || DEFAULT_REQUIRED_DAILY_HOURS;
+  const requiredDailyHours = Number(profile.required_daily_hours) || Number(settings?.required_daily_hours) || DEFAULT_REQUIRED_DAILY_HOURS;
   const holidayDates = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
   const monthlyHoursSummary = useMemo(() => {
