@@ -400,6 +400,16 @@ const EmployeeDetailView = ({ profile: initialProfile, onBack }: EmployeeDetailV
               </CardContent>
             </Card>
 
+            {/* Attendance Calendar */}
+            <AttendanceCalendar
+              month={selectedMonth}
+              year={selectedYear}
+              attendance={monthlyAttendance}
+              holidays={holidayDates}
+              workDays={workDays}
+              leaveRequests={leaveRequests}
+            />
+
             {/* Daily Attendance with Hours */}
             <Card>
               <CardHeader><CardTitle className="text-base">Daily Attendance</CardTitle></CardHeader>
