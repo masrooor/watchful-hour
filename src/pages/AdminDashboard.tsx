@@ -56,6 +56,8 @@ import EmployeeAllowancesDeductions from "@/components/admin/EmployeeAllowancesD
 import RoleManagement from "@/components/admin/RoleManagement";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import EmployeeDetailView from "@/components/admin/EmployeeDetailView";
+import EmployeeOnboarding from "@/components/admin/EmployeeOnboarding";
+import LeaveSettings from "@/components/admin/LeaveSettings";
 import { logAudit } from "@/lib/auditLog";
 import NotificationBell from "@/components/NotificationBell";
 import ClockInWidget from "@/components/ClockInWidget";
