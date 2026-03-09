@@ -317,6 +317,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                  <TableHead className="text-right">Custom Ded.</TableHead>
                  <TableHead className="text-right">Tax Ded.</TableHead>
                  <TableHead className="text-right">Net Salary</TableHead>
+                 <TableHead className="text-center">Payment</TableHead>
                  <TableHead className="text-center">Payslip</TableHead>
               </TableRow>
             </TableHeader>
