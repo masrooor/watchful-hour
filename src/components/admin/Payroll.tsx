@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2, DollarSign, CalendarDays, MinusCircle, Percent } from "lucide-react";
 import PayslipGenerator from "./PayslipGenerator";
 import TaxSlabSettings from "./TaxSlabSettings";
+import PayrollPaymentCell from "./PayrollPaymentCell";
 
 interface PayrollProps {
   profiles: any[];
