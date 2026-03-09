@@ -44,7 +44,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
 
-    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes, allowanceRes, deductionRes] = await Promise.all([
+    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes, allowanceRes, deductionRes, paymentRes] = await Promise.all([
       supabase
         .from("leave_requests")
         .select("*")
@@ -62,6 +62,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       supabase.from("tax_slabs").select("*").eq("is_active", true).order("min_salary", { ascending: true }),
       supabase.from("employee_allowances").select("*").eq("is_active", true),
       supabase.from("employee_deductions").select("*").eq("is_active", true),
+      supabase.from("payroll_payments" as any).select("*").eq("month", selectedMonth).eq("year", selectedYear),
     ]);
 
     setLeaveData(leaveRes.data || []);
