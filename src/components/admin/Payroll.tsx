@@ -368,6 +368,11 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                     <TableCell className="text-right text-sm text-late font-medium">
                       {p.absentDeduction > 0 ? `- Rs ${p.absentDeduction.toFixed(0)}` : "—"}
                     </TableCell>
+                    <TableCell className="text-right text-sm font-medium">
+                      {p.excessLeaveDays > 0 ? (
+                        <span className="text-destructive">- Rs {p.excessLeaveDeduction.toFixed(0)} ({p.excessLeaveDays}d)</span>
+                      ) : "—"}
+                    </TableCell>
                     <TableCell className="text-right text-sm text-late font-medium">
                       {p.loanDeduction > 0 ? `- Rs ${p.loanDeduction.toFixed(0)}` : "—"}
                     </TableCell>
