@@ -124,7 +124,18 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       const presentDays = userAttendance.length;
       const lateDays = userAttendance.filter((a) => a.status === "late").length;
 
-      // Unpaid leave deduction
+      // Excess leave deduction: if employee used more leaves than allowed balance
+      const userBalance = leaveBalances.find((b) => b.user_id === p.user_id);
+      let excessLeaveDays = 0;
+      if (userBalance) {
+        const casualExcess = Math.max(0, Number(userBalance.casual_used) - Number(userBalance.casual_total));
+        const sickExcess = Math.max(0, Number(userBalance.sick_used) - Number(userBalance.sick_total));
+        const annualExcess = Math.max(0, Number(userBalance.annual_used) - Number(userBalance.annual_total));
+        excessLeaveDays = casualExcess + sickExcess + annualExcess;
+      }
+      const excessLeaveDeduction = excessLeaveDays * perDaySalary;
+
+      // Unpaid leave deduction (absent without any leave)
       const absentDays = Math.max(0, totalWorkingDays - presentDays - leaveDays);
       const absentDeduction = absentDays * perDaySalary;
 
@@ -154,7 +165,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       }
       const taxDeduction = (salary * taxPercentage) / 100;
 
-      const totalDeduction = absentDeduction + loanDeduction + taxDeduction + totalCustomDeductions;
+      const totalDeduction = absentDeduction + excessLeaveDeduction + loanDeduction + taxDeduction + totalCustomDeductions;
       const grossWithAllowances = salary + totalAllowances;
       const netSalary = Math.max(0, grossWithAllowances - totalDeduction);
 
