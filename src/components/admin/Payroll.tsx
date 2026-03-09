@@ -73,6 +73,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     setTaxSlabs(taxRes.data || []);
     setAllowances(allowanceRes.data || []);
     setDeductions(deductionRes.data || []);
+    setPayments((paymentRes.data as any[]) || []);
     setLoading(false);
   };
 
