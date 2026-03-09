@@ -364,6 +364,16 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                       Rs {p.netSalary.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                     </TableCell>
                     <TableCell className="text-center">
+                      <PayrollPaymentCell
+                        userId={p.user_id}
+                        employeeName={p.name}
+                        month={selectedMonth}
+                        year={selectedYear}
+                        payment={payments.find((pm: any) => pm.user_id === p.user_id) || null}
+                        onUpdate={fetchData}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
                       <PayslipGenerator
                         employee={p}
                         month={months[selectedMonth]}
