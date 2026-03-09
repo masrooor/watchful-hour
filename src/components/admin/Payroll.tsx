@@ -33,6 +33,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
   const [allowances, setAllowances] = useState<any[]>([]);
   const [deductions, setDeductions] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [leaveBalances, setLeaveBalances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
