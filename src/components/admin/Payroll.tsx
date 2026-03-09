@@ -178,6 +178,8 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         lateDays,
         absentDays,
         absentDeduction,
+        excessLeaveDays,
+        excessLeaveDeduction,
         loanDeduction,
         taxPercentage,
         taxDeduction,
@@ -189,12 +191,12 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         netSalary,
       };
     });
-  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans, taxSlabs, allowances, deductions]);
+  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans, taxSlabs, allowances, deductions, leaveBalances]);
 
   const exportPayrollCSV = () => {
-    const headers = ["Employee ID", "Name", "Department", "Salary", "Allowances", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Loan Deduction", "Custom Deductions", "Tax %", "Tax Deduction", "Total Deduction", "Net Salary"];
+    const headers = ["Employee ID", "Name", "Department", "Salary", "Allowances", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Excess Leave Days", "Excess Leave Ded.", "Loan Deduction", "Custom Deductions", "Tax %", "Tax Deduction", "Total Deduction", "Net Salary"];
     const rows = payrollData.map((p) =>
-      [p.employee_id || "", p.name, p.department, p.salary, p.totalAllowances.toFixed(0), totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.totalCustomDeductions.toFixed(0), p.taxPercentage, p.taxDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
+      [p.employee_id || "", p.name, p.department, p.salary, p.totalAllowances.toFixed(0), totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.excessLeaveDays, p.excessLeaveDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.totalCustomDeductions.toFixed(0), p.taxPercentage, p.taxDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
     );
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
