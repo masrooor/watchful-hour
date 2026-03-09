@@ -329,6 +329,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                  <TableHead className="text-center">Present</TableHead>
                  <TableHead className="text-center">Absent</TableHead>
                  <TableHead className="text-right">Absent Ded.</TableHead>
+                 <TableHead className="text-right">Excess Leave Ded.</TableHead>
                  <TableHead className="text-right">Loan Ded.</TableHead>
                  <TableHead className="text-right">Custom Ded.</TableHead>
                  <TableHead className="text-right">Tax Ded.</TableHead>
@@ -340,7 +341,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
             <TableBody>
               {payrollData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
                     No employees found
                   </TableCell>
                 </TableRow>
