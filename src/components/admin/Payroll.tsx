@@ -33,6 +33,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
   const [allowances, setAllowances] = useState<any[]>([]);
   const [deductions, setDeductions] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [leaveBalances, setLeaveBalances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
 
-    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes, allowanceRes, deductionRes, paymentRes] = await Promise.all([
+    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes, allowanceRes, deductionRes, paymentRes, leaveBalRes] = await Promise.all([
       supabase
         .from("leave_requests")
         .select("*")
@@ -63,6 +64,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       supabase.from("employee_allowances").select("*").eq("is_active", true),
       supabase.from("employee_deductions").select("*").eq("is_active", true),
       supabase.from("payroll_payments" as any).select("*").eq("month", selectedMonth).eq("year", selectedYear),
+      supabase.from("leave_balances").select("*").eq("year", selectedYear),
     ]);
 
     setLeaveData(leaveRes.data || []);
@@ -74,6 +76,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     setAllowances(allowanceRes.data || []);
     setDeductions(deductionRes.data || []);
     setPayments((paymentRes.data as any[]) || []);
+    setLeaveBalances(leaveBalRes.data || []);
     setLoading(false);
   };
 
@@ -121,7 +124,18 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       const presentDays = userAttendance.length;
       const lateDays = userAttendance.filter((a) => a.status === "late").length;
 
-      // Unpaid leave deduction
+      // Excess leave deduction: if employee used more leaves than allowed balance
+      const userBalance = leaveBalances.find((b) => b.user_id === p.user_id);
+      let excessLeaveDays = 0;
+      if (userBalance) {
+        const casualExcess = Math.max(0, Number(userBalance.casual_used) - Number(userBalance.casual_total));
+        const sickExcess = Math.max(0, Number(userBalance.sick_used) - Number(userBalance.sick_total));
+        const annualExcess = Math.max(0, Number(userBalance.annual_used) - Number(userBalance.annual_total));
+        excessLeaveDays = casualExcess + sickExcess + annualExcess;
+      }
+      const excessLeaveDeduction = excessLeaveDays * perDaySalary;
+
+      // Unpaid leave deduction (absent without any leave)
       const absentDays = Math.max(0, totalWorkingDays - presentDays - leaveDays);
       const absentDeduction = absentDays * perDaySalary;
 
@@ -151,7 +165,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       }
       const taxDeduction = (salary * taxPercentage) / 100;
 
-      const totalDeduction = absentDeduction + loanDeduction + taxDeduction + totalCustomDeductions;
+      const totalDeduction = absentDeduction + excessLeaveDeduction + loanDeduction + taxDeduction + totalCustomDeductions;
       const grossWithAllowances = salary + totalAllowances;
       const netSalary = Math.max(0, grossWithAllowances - totalDeduction);
 
@@ -164,6 +178,8 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         lateDays,
         absentDays,
         absentDeduction,
+        excessLeaveDays,
+        excessLeaveDeduction,
         loanDeduction,
         taxPercentage,
         taxDeduction,
@@ -175,12 +191,12 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
         netSalary,
       };
     });
-  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans, taxSlabs, allowances, deductions]);
+  }, [profiles, leaveData, attendanceData, totalWorkingDays, selectedMonth, selectedYear, loans, taxSlabs, allowances, deductions, leaveBalances]);
 
   const exportPayrollCSV = () => {
-    const headers = ["Employee ID", "Name", "Department", "Salary", "Allowances", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Loan Deduction", "Custom Deductions", "Tax %", "Tax Deduction", "Total Deduction", "Net Salary"];
+    const headers = ["Employee ID", "Name", "Department", "Salary", "Allowances", "Working Days", "Present", "Leaves", "Absent", "Absent Deduction", "Excess Leave Days", "Excess Leave Ded.", "Loan Deduction", "Custom Deductions", "Tax %", "Tax Deduction", "Total Deduction", "Net Salary"];
     const rows = payrollData.map((p) =>
-      [p.employee_id || "", p.name, p.department, p.salary, p.totalAllowances.toFixed(0), totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.totalCustomDeductions.toFixed(0), p.taxPercentage, p.taxDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
+      [p.employee_id || "", p.name, p.department, p.salary, p.totalAllowances.toFixed(0), totalWorkingDays, p.presentDays, p.leaveDays, p.absentDays, p.absentDeduction.toFixed(0), p.excessLeaveDays, p.excessLeaveDeduction.toFixed(0), p.loanDeduction.toFixed(0), p.totalCustomDeductions.toFixed(0), p.taxPercentage, p.taxDeduction.toFixed(0), p.deduction.toFixed(0), p.netSalary.toFixed(0)].join(",")
     );
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -313,6 +329,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                  <TableHead className="text-center">Present</TableHead>
                  <TableHead className="text-center">Absent</TableHead>
                  <TableHead className="text-right">Absent Ded.</TableHead>
+                 <TableHead className="text-right">Excess Leave Ded.</TableHead>
                  <TableHead className="text-right">Loan Ded.</TableHead>
                  <TableHead className="text-right">Custom Ded.</TableHead>
                  <TableHead className="text-right">Tax Ded.</TableHead>
@@ -324,7 +341,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
             <TableBody>
               {payrollData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
                     No employees found
                   </TableCell>
                 </TableRow>
@@ -350,6 +367,11 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                     </TableCell>
                     <TableCell className="text-right text-sm text-late font-medium">
                       {p.absentDeduction > 0 ? `- Rs ${p.absentDeduction.toFixed(0)}` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right text-sm font-medium">
+                      {p.excessLeaveDays > 0 ? (
+                        <span className="text-destructive">- Rs {p.excessLeaveDeduction.toFixed(0)} ({p.excessLeaveDays}d)</span>
+                      ) : "—"}
                     </TableCell>
                     <TableCell className="text-right text-sm text-late font-medium">
                       {p.loanDeduction > 0 ? `- Rs ${p.loanDeduction.toFixed(0)}` : "—"}
