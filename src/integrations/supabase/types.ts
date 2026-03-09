@@ -449,6 +449,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_payments: {
+        Row: {
+          created_at: string
+          id: string
+          is_paid: boolean
+          month: number
+          notes: string | null
+          paid_at: string | null
+          paid_by: string | null
+          screenshot_path: string | null
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_paid?: boolean
+          month: number
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          screenshot_path?: string | null
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_paid?: boolean
+          month?: number
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          screenshot_path?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null

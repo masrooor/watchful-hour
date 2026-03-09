@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2, DollarSign, CalendarDays, MinusCircle, Percent } from "lucide-react";
 import PayslipGenerator from "./PayslipGenerator";
 import TaxSlabSettings from "./TaxSlabSettings";
+import PayrollPaymentCell from "./PayrollPaymentCell";
 
 interface PayrollProps {
   profiles: any[];
@@ -31,6 +32,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
   const [taxSlabs, setTaxSlabs] = useState<any[]>([]);
   const [allowances, setAllowances] = useState<any[]>([]);
   const [deductions, setDeductions] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     const startDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
     const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
 
-    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes, allowanceRes, deductionRes] = await Promise.all([
+    const [leaveRes, attRes, settingsRes, holidayRes, loanRes, taxRes, allowanceRes, deductionRes, paymentRes] = await Promise.all([
       supabase
         .from("leave_requests")
         .select("*")
@@ -60,6 +62,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
       supabase.from("tax_slabs").select("*").eq("is_active", true).order("min_salary", { ascending: true }),
       supabase.from("employee_allowances").select("*").eq("is_active", true),
       supabase.from("employee_deductions").select("*").eq("is_active", true),
+      supabase.from("payroll_payments" as any).select("*").eq("month", selectedMonth).eq("year", selectedYear),
     ]);
 
     setLeaveData(leaveRes.data || []);
@@ -70,6 +73,7 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
     setTaxSlabs(taxRes.data || []);
     setAllowances(allowanceRes.data || []);
     setDeductions(deductionRes.data || []);
+    setPayments((paymentRes.data as any[]) || []);
     setLoading(false);
   };
 
@@ -313,13 +317,14 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                  <TableHead className="text-right">Custom Ded.</TableHead>
                  <TableHead className="text-right">Tax Ded.</TableHead>
                  <TableHead className="text-right">Net Salary</TableHead>
+                 <TableHead className="text-center">Payment</TableHead>
                  <TableHead className="text-center">Payslip</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {payrollData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                     No employees found
                   </TableCell>
                 </TableRow>
@@ -357,6 +362,16 @@ const Payroll = ({ profiles, profileMap }: PayrollProps) => {
                     </TableCell>
                     <TableCell className="text-right text-sm font-bold text-foreground">
                       Rs {p.netSalary.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <PayrollPaymentCell
+                        userId={p.user_id}
+                        employeeName={p.name}
+                        month={selectedMonth}
+                        year={selectedYear}
+                        payment={payments.find((pm: any) => pm.user_id === p.user_id) || null}
+                        onUpdate={fetchData}
+                      />
                     </TableCell>
                     <TableCell className="text-center">
                       <PayslipGenerator
