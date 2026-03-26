@@ -393,7 +393,7 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
               </div>
               <div className="space-y-1.5">
                 <Label>End Date</Label>
-                <Input type="date" value={form.end_date} min={form.start_date || new Date().toISOString().split('T')[0]} onChange={(e) => setForm((p) => ({ ...p, end_date: e.target.value }))} required />
+                <Input type="date" value={form.end_date} min={isAdminOrHR ? (form.start_date || undefined) : (form.start_date || new Date().toISOString().split('T')[0])} onChange={(e) => setForm((p) => ({ ...p, end_date: e.target.value }))} required />
               </div>
             </div>
             <div className="space-y-1.5">
