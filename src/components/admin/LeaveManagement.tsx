@@ -63,6 +63,7 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectingLeaveId, setRejectingLeaveId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [detailLeave, setDetailLeave] = useState<any | null>(null);
   const [form, setForm] = useState({
     leave_type: "casual",
     start_date: "",
