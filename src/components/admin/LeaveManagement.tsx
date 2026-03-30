@@ -372,6 +372,71 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
         </DialogContent>
       </Dialog>
 
+      {/* Leave detail dialog */}
+      <Dialog open={!!detailLeave} onOpenChange={(open) => !open && setDetailLeave(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Leave Request Details</DialogTitle>
+          </DialogHeader>
+          {detailLeave && (() => {
+            const p = profileMap[detailLeave.user_id];
+            const days = Math.ceil(
+              (new Date(detailLeave.end_date).getTime() - new Date(detailLeave.start_date).getTime()) / (1000 * 60 * 60 * 24)
+            ) + 1;
+            const approver = detailLeave.approved_by ? profileMap[detailLeave.approved_by] : null;
+            return (
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-muted-foreground">Employee</p>
+                    <p className="font-medium text-foreground">{p?.name || "Unknown"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Leave Type</p>
+                    <Badge variant="secondary">{leaveTypeLabels[detailLeave.leave_type] || detailLeave.leave_type}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">From</p>
+                    <p className="font-medium text-foreground">{detailLeave.start_date}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">To</p>
+                    <p className="font-medium text-foreground">{detailLeave.end_date}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Days</p>
+                    <p className="font-medium text-foreground">{days}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Status</p>
+                    <Badge variant="outline" className={statusColors[detailLeave.status]}>{detailLeave.status}</Badge>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Reason</p>
+                  <p className="font-medium text-foreground whitespace-pre-wrap">{detailLeave.reason || "No reason provided"}</p>
+                </div>
+                {detailLeave.status === "rejected" && detailLeave.rejection_reason && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Rejection Reason</p>
+                    <p className="font-medium text-destructive whitespace-pre-wrap">{detailLeave.rejection_reason}</p>
+                  </div>
+                )}
+                {approver && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">{detailLeave.status === "approved" ? "Approved" : "Reviewed"} By</p>
+                    <p className="font-medium text-foreground">{approver?.name || "Unknown"}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailLeave(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showApply} onOpenChange={setShowApply}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
