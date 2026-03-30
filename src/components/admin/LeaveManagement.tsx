@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,7 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectingLeaveId, setRejectingLeaveId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [detailLeave, setDetailLeave] = useState<any | null>(null);
   const [form, setForm] = useState({
     leave_type: "casual",
     start_date: "",
@@ -317,7 +318,11 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
                     <TableCell className="text-sm text-muted-foreground">{l.start_date}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{l.end_date}</TableCell>
                     <TableCell className="text-sm font-medium text-foreground">{days}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{l.reason || "—"}</TableCell>
+                    <TableCell
+                      className="text-sm text-muted-foreground max-w-[200px] truncate cursor-pointer hover:text-foreground"
+                      onClick={() => setDetailLeave(l)}
+                      title="Click to view details"
+                    >{l.reason || "—"}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColors[l.status]}>{l.status}</Badge>
                     </TableCell>
@@ -363,6 +368,71 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRejectDialog(false)}>Cancel</Button>
             <Button variant="destructive" onClick={confirmReject}>Reject Leave</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Leave detail dialog */}
+      <Dialog open={!!detailLeave} onOpenChange={(open) => !open && setDetailLeave(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Leave Request Details</DialogTitle>
+          </DialogHeader>
+          {detailLeave && (() => {
+            const p = profileMap[detailLeave.user_id];
+            const days = Math.ceil(
+              (new Date(detailLeave.end_date).getTime() - new Date(detailLeave.start_date).getTime()) / (1000 * 60 * 60 * 24)
+            ) + 1;
+            const approver = detailLeave.approved_by ? profileMap[detailLeave.approved_by] : null;
+            return (
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-muted-foreground">Employee</p>
+                    <p className="font-medium text-foreground">{p?.name || "Unknown"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Leave Type</p>
+                    <Badge variant="secondary">{leaveTypeLabels[detailLeave.leave_type] || detailLeave.leave_type}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">From</p>
+                    <p className="font-medium text-foreground">{detailLeave.start_date}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">To</p>
+                    <p className="font-medium text-foreground">{detailLeave.end_date}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Days</p>
+                    <p className="font-medium text-foreground">{days}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Status</p>
+                    <Badge variant="outline" className={statusColors[detailLeave.status]}>{detailLeave.status}</Badge>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Reason</p>
+                  <p className="font-medium text-foreground whitespace-pre-wrap">{detailLeave.reason || "No reason provided"}</p>
+                </div>
+                {detailLeave.status === "rejected" && detailLeave.rejection_reason && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Rejection Reason</p>
+                    <p className="font-medium text-destructive whitespace-pre-wrap">{detailLeave.rejection_reason}</p>
+                  </div>
+                )}
+                {approver && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">{detailLeave.status === "approved" ? "Approved" : "Reviewed"} By</p>
+                    <p className="font-medium text-foreground">{approver?.name || "Unknown"}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailLeave(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
