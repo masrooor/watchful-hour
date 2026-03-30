@@ -318,7 +318,11 @@ const LeaveManagement = ({ profiles, profileMap, isAdminOrHR }: LeaveManagementP
                     <TableCell className="text-sm text-muted-foreground">{l.start_date}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{l.end_date}</TableCell>
                     <TableCell className="text-sm font-medium text-foreground">{days}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{l.reason || "—"}</TableCell>
+                    <TableCell
+                      className="text-sm text-muted-foreground max-w-[200px] truncate cursor-pointer hover:text-foreground"
+                      onClick={() => setDetailLeave(l)}
+                      title="Click to view details"
+                    >{l.reason || "—"}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColors[l.status]}>{l.status}</Badge>
                     </TableCell>
