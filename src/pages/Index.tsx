@@ -10,6 +10,7 @@ import EmployeeLeaveWidget from "@/components/EmployeeLeaveWidget";
 import EmployeeProfileEditor from "@/components/EmployeeProfileEditor";
 import EmployeeAnnouncements from "@/components/EmployeeAnnouncements";
 import EmployeeAttendanceCalendar from "@/components/EmployeeAttendanceCalendar";
+import EmployeeAttendanceRecords from "@/components/EmployeeAttendanceRecords";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,6 +142,8 @@ const Index = () => {
             <LocationMap employees={employees} attendance={attendanceRecords} />
           </div>
         );
+      case "records":
+        return <EmployeeAttendanceRecords />;
       case "leave":
         return <EmployeeLeaveWidget />;
       case "loans":
@@ -185,6 +188,7 @@ const Index = () => {
                   {activeSection === "dashboard" ? "Dashboard" :
                    activeSection === "profile" ? "My Profile" :
                    activeSection === "attendance" ? "Attendance" :
+                   activeSection === "records" ? "Attendance Records" :
                    activeSection === "leave" ? "Leave Management" :
                    activeSection === "loans" ? "Loan Details" :
                    "Announcements"}
