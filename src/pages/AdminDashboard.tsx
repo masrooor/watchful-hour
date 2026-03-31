@@ -862,7 +862,7 @@ const AdminDashboard = () => {
                         <SelectItem value="all">All Status</SelectItem>
                         <SelectItem value="on-time">On Time</SelectItem>
                         <SelectItem value="late">Late</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="absent">Absent</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={dateRange} onValueChange={setDateRange}>
