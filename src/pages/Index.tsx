@@ -188,6 +188,7 @@ const Index = () => {
                   {activeSection === "dashboard" ? "Dashboard" :
                    activeSection === "profile" ? "My Profile" :
                    activeSection === "attendance" ? "Attendance" :
+                   activeSection === "records" ? "Attendance Records" :
                    activeSection === "leave" ? "Leave Management" :
                    activeSection === "loans" ? "Loan Details" :
                    "Announcements"}

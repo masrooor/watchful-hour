@@ -4,6 +4,7 @@ import {
   User,
   CalendarDays,
   Clock,
+  ClipboardList,
   Wallet,
   Megaphone,
   LogOut,
