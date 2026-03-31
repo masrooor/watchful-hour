@@ -121,6 +121,8 @@ const AdminDashboard = () => {
   const [pendingLoans, setPendingLoans] = useState(0);
   const [probationPeriodDays, setProbationPeriodDays] = useState(90);
   const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5, 6]);
+  const [holidays, setHolidays] = useState<any[]>([]);
+  const [approvedLeaves, setApprovedLeaves] = useState<any[]>([]);
 
   const handlePasswordChange = async () => {
     if (pwForm.newPassword.length < 6) {
@@ -189,6 +191,12 @@ const AdminDashboard = () => {
         .order("date", { ascending: false })
         .limit(500);
       setAllAttendance(allAtt || []);
+
+      // Fetch holidays and approved leaves for absent calculation
+      const { data: hols } = await supabase.from("holidays").select("*");
+      setHolidays(hols || []);
+      const { data: appLeaves } = await supabase.from("leave_requests").select("*").eq("status", "approved");
+      setApprovedLeaves(appLeaves || []);
 
       // Fetch pending counts
       const { count: leaveCount } = await supabase
@@ -278,21 +286,71 @@ const AdminDashboard = () => {
     const now = new Date();
     const today = now.toISOString().split("T")[0];
 
-    let records = allAttendance;
+    // Determine date range
+    let startDate = today;
+    let endDate = today;
 
     if (dateRange === "today") {
-      records = records.filter((a) => a.date === today);
+      startDate = today;
+      endDate = today;
     } else if (dateRange === "week") {
       const weekAgo = new Date(now);
       weekAgo.setDate(weekAgo.getDate() - 7);
-      records = records.filter((a) => new Date(a.date) >= weekAgo);
+      startDate = weekAgo.toISOString().split("T")[0];
     } else if (dateRange === "month") {
       const monthAgo = new Date(now);
       monthAgo.setMonth(monthAgo.getMonth() - 1);
-      records = records.filter((a) => new Date(a.date) >= monthAgo);
+      startDate = monthAgo.toISOString().split("T")[0];
+    } else {
+      startDate = "2000-01-01";
     }
 
-    return records.filter((a) => {
+    // Filter actual records by date range
+    let records = allAttendance.filter((a) => a.date >= startDate && a.date <= endDate);
+
+    // Generate absent records for all employees on workdays with no attendance
+    const holidayDates = new Set(holidays.map((h: any) => h.date));
+    const attendanceByDateUser = new Map<string, boolean>();
+    records.forEach((a) => attendanceByDateUser.set(`${a.date}_${a.user_id}`, true));
+
+    const absentRecords: any[] = [];
+    const current = new Date(startDate);
+    const endD = new Date(endDate > today ? today : endDate);
+
+    while (current <= endD) {
+      const dateStr = current.toISOString().split("T")[0];
+      const dayOfWeek = current.getDay();
+      const isWorkDay = workDays.includes(dayOfWeek);
+      const isHoliday = holidayDates.has(dateStr);
+
+      if (isWorkDay && !isHoliday) {
+        profiles.forEach((p) => {
+          if (!attendanceByDateUser.has(`${dateStr}_${p.user_id}`)) {
+            const isOnLeave = approvedLeaves.some(
+              (lr: any) => lr.user_id === p.user_id && dateStr >= lr.start_date && dateStr <= lr.end_date
+            );
+            if (!isOnLeave) {
+              absentRecords.push({
+                id: `absent-${dateStr}-${p.user_id}`,
+                user_id: p.user_id,
+                date: dateStr,
+                clock_in: null,
+                clock_out: null,
+                status: "absent",
+                location_name: null,
+                latitude: null,
+                longitude: null,
+              });
+            }
+          }
+        });
+      }
+      current.setDate(current.getDate() + 1);
+    }
+
+    const allRecords = [...records, ...absentRecords];
+
+    return allRecords.filter((a) => {
       const profile = profileMap[a.user_id];
       const matchSearch =
         !search ||
@@ -301,8 +359,8 @@ const AdminDashboard = () => {
       const matchDept = deptFilter === "all" || profile?.department === deptFilter;
       const matchStatus = statusFilter === "all" || a.status === statusFilter;
       return matchSearch && matchDept && matchStatus;
-    });
-  }, [allAttendance, search, deptFilter, statusFilter, dateRange, profileMap]);
+    }).sort((a, b) => b.date.localeCompare(a.date));
+  }, [allAttendance, search, deptFilter, statusFilter, dateRange, profileMap, profiles, workDays, holidays, approvedLeaves]);
 
   const exportCSV = () => {
     const headers = ["Name", "Email", "Department", "Date", "Clock In", "Clock Out", "Status"];
@@ -804,7 +862,7 @@ const AdminDashboard = () => {
                         <SelectItem value="all">All Status</SelectItem>
                         <SelectItem value="on-time">On Time</SelectItem>
                         <SelectItem value="late">Late</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="absent">Absent</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={dateRange} onValueChange={setDateRange}>

@@ -30,14 +30,32 @@ serve(async (req) => {
       );
     }
 
-    // Fetch admin notification email from attendance settings
-    const { data: settings } = await supabase
-      .from('attendance_settings')
-      .select('admin_notification_email')
-      .limit(1)
-      .single();
+    // Get all admin and HR user IDs for in-app notifications
+    const { data: adminHrRoles } = await supabase
+      .from('user_roles')
+      .select('user_id, role')
+      .in('role', ['admin', 'hr']);
 
-    const adminEmail = settings?.admin_notification_email || 'admin@company.com';
+    const adminHrUserIds = [...new Set((adminHrRoles || []).map((r: any) => r.user_id))];
+
+    const notificationMessage = `${employeeName || 'An employee'} has requested a loan "${description}" for Rs ${totalAmount} with monthly deduction of Rs ${monthlyDeduction}. Reason: ${reason || 'Not specified'}.`;
+
+    // Insert in-app notifications for all admin/HR users
+    if (adminHrUserIds.length > 0) {
+      const notifications = adminHrUserIds.map((uid: string) => ({
+        user_id: uid,
+        title: `New Loan Request - ${employeeName || 'Employee'}`,
+        message: notificationMessage,
+        type: 'loan',
+      }));
+      await supabase.from('notifications').insert(notifications);
+    }
+
+    // Get admin profiles for email logging
+    const { data: adminProfiles } = await supabase
+      .from('profiles')
+      .select('user_id, name, email')
+      .in('user_id', adminHrUserIds);
 
     const aiResponse = await fetch(AI_GATEWAY_URL, {
       method: 'POST',
@@ -72,15 +90,17 @@ serve(async (req) => {
 
     const subject = `New Loan Request - ${employeeName} (Rs ${totalAmount})`;
 
-    console.log(`[NEW LOAN REQUEST] To Admin: ${adminEmail}`);
-    console.log(`[NEW LOAN REQUEST] Subject: ${subject}`);
-    console.log(`[NEW LOAN REQUEST] Body: ${emailBody}`);
+    for (const profile of (adminProfiles || [])) {
+      console.log(`[NEW LOAN REQUEST] To: ${profile.email} (${profile.name})`);
+      console.log(`[NEW LOAN REQUEST] Subject: ${subject}`);
+      console.log(`[NEW LOAN REQUEST] Body: ${emailBody}`);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
+        notified: adminHrUserIds.length,
         notification: {
-          admin: { email: adminEmail },
           subject,
           body: emailBody,
           employee: employeeName,
