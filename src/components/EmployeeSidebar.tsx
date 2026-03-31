@@ -34,6 +34,7 @@ const menuItems = [
   { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
   { id: "profile", title: "My Profile", icon: User },
   { id: "attendance", title: "Attendance", icon: Clock },
+  { id: "records", title: "Records", icon: ClipboardList },
   { id: "leave", title: "Leave", icon: CalendarDays },
   { id: "loans", title: "Loans", icon: Wallet },
   { id: "announcements", title: "Announcements", icon: Megaphone },
