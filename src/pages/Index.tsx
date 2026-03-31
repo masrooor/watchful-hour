@@ -142,6 +142,8 @@ const Index = () => {
             <LocationMap employees={employees} attendance={attendanceRecords} />
           </div>
         );
+      case "records":
+        return <EmployeeAttendanceRecords />;
       case "leave":
         return <EmployeeLeaveWidget />;
       case "loans":
