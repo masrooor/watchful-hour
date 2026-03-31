@@ -192,6 +192,12 @@ const AdminDashboard = () => {
         .limit(500);
       setAllAttendance(allAtt || []);
 
+      // Fetch holidays and approved leaves for absent calculation
+      const { data: hols } = await supabase.from("holidays").select("*");
+      setHolidays(hols || []);
+      const { data: appLeaves } = await supabase.from("leave_requests").select("*").eq("status", "approved");
+      setApprovedLeaves(appLeaves || []);
+
       // Fetch pending counts
       const { count: leaveCount } = await supabase
         .from("leave_requests")
