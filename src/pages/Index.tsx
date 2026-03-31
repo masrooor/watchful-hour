@@ -10,6 +10,7 @@ import EmployeeLeaveWidget from "@/components/EmployeeLeaveWidget";
 import EmployeeProfileEditor from "@/components/EmployeeProfileEditor";
 import EmployeeAnnouncements from "@/components/EmployeeAnnouncements";
 import EmployeeAttendanceCalendar from "@/components/EmployeeAttendanceCalendar";
+import EmployeeAttendanceRecords from "@/components/EmployeeAttendanceRecords";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
